@@ -77,7 +77,7 @@ export default function ApiDetailPage({ params: paramsPromise }: ApiDetailPagePr
           </CardTitle>
            <CardDescription>
             Explore and interact with the available endpoints for the {api.name}. These API routes are live!
-            The paths shown below are relative to your application's base URL (e.g., if your app is at <code>http://localhost:3000</code>, then <code>/api/greeting</code> would be <code>http://localhost:3000/api/greeting</code>).
+            The paths shown below are relative to your application's base URL. For example, if your application is hosted at <code>https://your-app-domain.com</code>, then an endpoint path like <code>/api/greeting</code> would be accessible at <code>https://your-app-domain.com/api/greeting</code>.
             You can use the &quot;Try it out&quot; section for each endpoint or use tools like <code>curl</code>, Postman, or your browser&apos;s address bar (for GET requests) to interact with them.
           </CardDescription>
         </CardHeader>
