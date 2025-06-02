@@ -1,24 +1,24 @@
 
-import { publicApis, type ApiDefinition, type ApiEndpoint } from '@/data/apis';
+"use client";
+
+import { publicApis, type ApiDefinition } from '@/data/apis';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CodeBlock } from '@/components/CodeBlock';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, ExternalLink, Terminal, Info, Layers, FileInput, FileOutput } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Terminal, Info, Layers, FileInput, FileOutput, Server, PlayCircle } from 'lucide-react';
+import { InteractiveEndpoint } from './components/InteractiveEndpoint'; // New component
 
 interface ApiDetailPageProps {
   params: { id: string };
 }
 
-export async function generateStaticParams() {
-  return publicApis.map((api) => ({
-    id: api.id,
-  }));
-}
+// Note: generateStaticParams can still be used with client components if needed,
+// but for dynamic data fetching based on client interaction, client components are necessary.
+// export async function generateStaticParams() { ... } // Kept for reference, ensure it's compatible if used
 
-export default async function ApiDetailPage({ params }: ApiDetailPageProps) {
+export default function ApiDetailPage({ params }: ApiDetailPageProps) {
   const api = publicApis.find(a => a.id === params.id);
 
   if (!api) {
@@ -56,7 +56,7 @@ export default async function ApiDetailPage({ params }: ApiDetailPageProps) {
                   </Button>
                 ) : (
                    <Badge variant="outline" className="border-green-500 text-green-700 dark:border-green-400 dark:text-green-300">
-                    <Info className="mr-2 h-4 w-4" />
+                    <Server className="mr-2 h-4 w-4" />
                     Internal API - Hosted by this App
                   </Badge>
                 )}
@@ -72,16 +72,16 @@ export default async function ApiDetailPage({ params }: ApiDetailPageProps) {
             <Terminal className="h-6 w-6 text-accent" />
             API Endpoints & Usage
           </CardTitle>
-          <CardDescription>
-            Explore the available endpoints for the {api.name}. These API routes are now live!
+           <CardDescription>
+            Explore and interact with the available endpoints for the {api.name}. These API routes are live!
             The paths shown below are relative to your application's base URL (e.g., if your app is at <code>http://localhost:3000</code>, then <code>/api/greeting</code> would be <code>http://localhost:3000/api/greeting</code>).
-            You can use tools like <code>curl</code>, Postman, or your browser's address bar (for GET requests) to interact with them.
+            You can use the &quot;Try it out&quot; section for each endpoint or use tools like <code>curl</code>, Postman, or your browser&apos;s address bar (for GET requests) to interact with them.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-10">
           {api.endpoints.length > 0 ? (
             api.endpoints.map((endpoint, index) => (
-              <div key={index} className="p-4 border rounded-lg bg-card shadow">
+              <div key={index} className="p-4 border rounded-lg bg-card shadow-md space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                   <div className="flex items-center gap-2">
                     <Badge
@@ -100,31 +100,53 @@ export default async function ApiDetailPage({ params }: ApiDetailPageProps) {
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">{endpoint.description}</p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {endpoint.exampleRequest && (
-                    <div>
-                      <h4 className="text-xs font-semibold mb-1 text-foreground flex items-center">
-                        <FileInput className="h-4 w-4 mr-1.5 text-accent" />
-                        Example Request {endpoint.method === 'GET' ? 'Parameters' : 'Body'}:
-                      </h4>
-                      <CodeBlock 
-                        code={endpoint.exampleRequest} 
-                        language={endpoint.method === 'GET' ? 'text' : 'json'} 
-                        className="text-xs" 
-                      />
+                {/* Static Examples Section - Consider refactoring if this gets too repetitive with InteractiveEndpoint */}
+                {(endpoint.exampleRequest || endpoint.exampleResponse) && (
+                  <details className="group">
+                    <summary className="cursor-pointer text-sm font-medium text-accent hover:underline list-none flex items-center">
+                      <Info className="h-4 w-4 mr-1.5 text-accent group-open:rotate-90 transition-transform"/> 
+                      Show Static Examples
+                    </summary>
+                    <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4 pl-4 border-l-2 border-accent/30">
+                      {endpoint.exampleRequest && (
+                        <div>
+                          <h4 className="text-xs font-semibold mb-1 text-foreground flex items-center">
+                            <FileInput className="h-4 w-4 mr-1.5 text-accent" />
+                            Example Request {endpoint.method === 'GET' ? 'Parameters' : 'Body'}:
+                          </h4>
+                          <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-all p-2 bg-muted/50 rounded-md border">
+                            <code>{endpoint.exampleRequest}</code>
+                          </pre>
+                        </div>
+                      )}
+                      
+                      {endpoint.exampleResponse && (
+                        <div className={!endpoint.exampleRequest ? 'md:col-span-2' : ''}>
+                          <h4 className="text-xs font-semibold mb-1 text-foreground flex items-center">
+                            <FileOutput className="h-4 w-4 mr-1.5 text-accent" />
+                            Example Response:
+                          </h4>
+                           <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-all p-2 bg-muted/50 rounded-md border">
+                            <code>{JSON.stringify(JSON.parse(endpoint.exampleResponse), null, 2)}</code>
+                          </pre>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  
-                  {endpoint.exampleResponse && (
-                    <div className={!endpoint.exampleRequest ? 'md:col-span-2' : ''}>
-                      <h4 className="text-xs font-semibold mb-1 text-foreground flex items-center">
-                        <FileOutput className="h-4 w-4 mr-1.5 text-accent" />
-                        Example Response:
-                      </h4>
-                      <CodeBlock code={endpoint.exampleResponse} language="json" className="text-xs" />
-                    </div>
-                  )}
-                </div>
+                  </details>
+                )}
+
+                {/* Interactive Section */}
+                <Card className="bg-background/50 border-dashed border-primary/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center">
+                      <PlayCircle className="h-5 w-5 mr-2 text-primary" />
+                      Try it out
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <InteractiveEndpoint endpoint={endpoint} />
+                  </CardContent>
+                </Card>
               </div>
             ))
           ) : (
@@ -135,3 +157,5 @@ export default async function ApiDetailPage({ params }: ApiDetailPageProps) {
     </div>
   );
 }
+
+    

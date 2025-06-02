@@ -14,36 +14,34 @@ interface CodeBlockProps {
 export function CodeBlock({ code, language = "json", className }: CodeBlockProps) {
   const { toast } = useToast();
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      toast({ title: "Copied!", description: "Code copied to clipboard." });
-    } catch (err) {
-      toast({ variant: "destructive", title: "Failed to copy", description: "Could not copy code to clipboard." });
-      console.error("Failed to copy: ", err);
-    }
-  };
-  
   let formattedCode = code;
   if (language === "json") {
     try {
-      // Attempt to parse and re-stringify only if it looks like a JSON object or array
-      if (code.trim().startsWith("{") || code.trim().startsWith("[")) {
+      // Attempt to parse and re-stringify to ensure consistent formatting if it's valid JSON
+      if (typeof code === 'string' && (code.trim().startsWith("{") || code.trim().startsWith("["))) {
         const parsedJson = JSON.parse(code);
         formattedCode = JSON.stringify(parsedJson, null, 2);
       } else {
-        // If it's not starting with { or [, treat as pre-formatted or non-JSON string.
-        // This could be for simple strings or already formatted JSON needing preservation.
+        // If it's not a JSON object/array string, or already formatted, keep as is.
         formattedCode = code;
       }
     } catch (error) {
-      // If parsing fails, use the original code string
-      console.warn("CodeBlock received potentially non-JSON string for language 'json':", code.substring(0,100));
-      formattedCode = code; // Fallback to original code
+      // If parsing fails, it's likely not valid JSON or a simple string. Use the original.
+      // console.warn("CodeBlock received non-JSON or malformed JSON string for language 'json':", code.substring(0,100));
+      formattedCode = code; 
     }
   }
 
-
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(formattedCode);
+      toast({ title: "Copied!", description: "Code copied to clipboard." });
+    } catch (err) {
+      console.error("Failed to copy code: ", err);
+      toast({ variant: "destructive", title: "Copy Failed", description: "Could not copy code to clipboard." });
+    }
+  };
+    
   return (
     <div className={`relative rounded-md bg-muted/50 p-4 my-2 border ${className}`}>
       <Button
