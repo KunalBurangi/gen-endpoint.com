@@ -55,7 +55,9 @@ export function GenerateEndpointForm() {
       console.error("Error generating API endpoint:", error);
       let description = "Failed to generate API endpoint details.";
       if (error instanceof Error) {
-        if (error.message.includes("API key not valid")) {
+        if (error.message.includes("User API key is required")) {
+          description = "A Google AI API key is required. Please provide one in the API Key Manager section above.";
+        } else if (error.message.includes("API key not valid")) {
           description = "API key not valid. Please check your key in the API Key Manager section.";
         } else if (error.message.includes("503") || error.message.toLowerCase().includes("model is overloaded") || error.message.toLowerCase().includes("service unavailable")) {
           description = "The AI model is currently overloaded or unavailable. Please try again in a few moments.";
@@ -72,7 +74,7 @@ export function GenerateEndpointForm() {
   let simulatedEndpoint: ApiEndpoint | null = null;
   if (generatedOutput) {
     simulatedEndpoint = {
-      method: generatedOutput.httpMethod.toUpperCase() as ApiEndpoint['method'], // Ensure method is one of the allowed types
+      method: generatedOutput.httpMethod.toUpperCase() as ApiEndpoint['method'], 
       path: generatedOutput.suggestedPath,
       description: "This is a simulation for the AI-generated endpoint. This endpoint is not live until you create its route file.",
       exampleRequest: (generatedOutput.httpMethod.toUpperCase() === 'POST' || generatedOutput.httpMethod.toUpperCase() === 'PUT') ? "{ \n  \"message\": \"This is a sample request body. Modify as needed for simulation.\"\n}" : undefined,
@@ -182,4 +184,3 @@ export function GenerateEndpointForm() {
     </Form>
   );
 }
-

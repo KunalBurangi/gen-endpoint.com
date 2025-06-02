@@ -51,6 +51,7 @@ Schema for your JSON output:
 }
 `;
 
+// originalPrompt is useful for its config and schema definitions, even if not directly called for generation without a user key.
 const originalPrompt = globalAi.definePrompt({
   name: 'generateApiEndpointPrompt',
   input: { schema: GenerateApiEndpointInputSchema.omit({ userApiKey: true }) },
@@ -66,19 +67,18 @@ const generateApiEndpointFlow = globalAi.defineFlow(
     outputSchema: GenerateApiEndpointOutputSchema,
   },
   async (input) => {
-    if (input.userApiKey) {
-      const customGenkit = genkit({ plugins: [googleAI({ apiKey: input.userApiKey })] });
-      const response = await customGenkit.generate({
-        model: 'googleai/gemini-2.0-flash',
-        system: systemPrompt,
-        prompt: `User Prompt: ${input.prompt}`,
-        output: { schema: GenerateApiEndpointOutputSchema },
-        config: originalPrompt.config,
-      });
-      return response.output!;
-    } else {
-      const { output } = await originalPrompt({ prompt: input.prompt });
-      return output!;
+    if (!input.userApiKey) {
+      throw new Error("User API key is required. Please provide it using the API Key Manager.");
     }
+
+    const customGenkit = genkit({ plugins: [googleAI({ apiKey: input.userApiKey })] });
+    const response = await customGenkit.generate({
+      model: 'googleai/gemini-2.0-flash',
+      system: systemPrompt,
+      prompt: `User Prompt: ${input.prompt}`,
+      output: { schema: GenerateApiEndpointOutputSchema },
+      config: originalPrompt.config,
+    });
+    return response.output!;
   }
 );

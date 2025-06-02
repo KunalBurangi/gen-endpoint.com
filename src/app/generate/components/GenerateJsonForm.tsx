@@ -62,7 +62,9 @@ export function GenerateJsonForm() {
       console.error("Error generating example JSON:", error);
       let description = "Failed to generate example JSON.";
       if (error instanceof Error) {
-        if (error.message.includes("API key not valid")) {
+        if (error.message.includes("User API key is required")) {
+          description = "A Google AI API key is required. Please provide one in the API Key Manager section above.";
+        } else if (error.message.includes("API key not valid")) {
           description = "API key not valid. Please check your key in the API Key Manager section.";
         } else if (error.message.includes("503") || error.message.toLowerCase().includes("model is overloaded") || error.message.toLowerCase().includes("service unavailable")) {
           description = "The AI model is currently overloaded or unavailable. Please try again in a few moments.";
@@ -113,4 +115,3 @@ export function GenerateJsonForm() {
     </Form>
   );
 }
-
