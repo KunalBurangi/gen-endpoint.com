@@ -111,7 +111,7 @@ export function GenerateEndpointForm() {
                     Generated Endpoint Details
                 </h3>
                  <div className="space-y-1 mb-3">
-                    <p className="text-sm"><strong className="font-medium">HTTP Method:</strong>
+                    <div className="text-sm"><strong className="font-medium">HTTP Method:</strong>
                         <Badge variant={
                             generatedOutput.httpMethod === 'GET' ? 'default' :
                             generatedOutput.httpMethod === 'POST' ? 'secondary' :
@@ -128,8 +128,8 @@ export function GenerateEndpointForm() {
                         >
                             {generatedOutput.httpMethod}
                         </Badge>
-                    </p>
-                    <p className="text-sm"><strong className="font-medium">Suggested Path:</strong> <code className="text-sm bg-muted p-1 rounded-md ml-1">{generatedOutput.suggestedPath}</code></p>
+                    </div>
+                    <div className="text-sm"><strong className="font-medium">Suggested Path:</strong> <code className="text-sm bg-muted p-1 rounded-md ml-1">{generatedOutput.suggestedPath}</code></div>
                 </div>
               </div>
 
