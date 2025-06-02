@@ -7,12 +7,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { CodeBlock } from "@/components/CodeBlock";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Network, Settings, FileCode, Package } from "lucide-react"; // Changed PackageOutput to Package
+import { Loader2, Network, Settings, FileCode, Package, PlayCircle } from "lucide-react";
 import { generateApiEndpoint, type GenerateApiEndpointInput, type GenerateApiEndpointOutput } from "@/ai/flows/generate-api-endpoint";
+import type { ApiEndpoint } from '@/data/apis';
+import { InteractiveEndpoint } from "@/app/apis/[id]/components/InteractiveEndpoint";
 import { getUserApiKey } from "./ApiKeyManager";
 import { Badge } from "@/components/ui/badge";
 
@@ -64,6 +66,18 @@ export function GenerateEndpointForm() {
       setIsLoading(false);
     }
   };
+  
+  let simulatedEndpoint: ApiEndpoint | null = null;
+  if (generatedOutput) {
+    simulatedEndpoint = {
+      method: generatedOutput.httpMethod.toUpperCase() as ApiEndpoint['method'], // Ensure method is one of the allowed types
+      path: generatedOutput.suggestedPath,
+      description: "This is a simulation for the AI-generated endpoint. This endpoint is not live until you create its route file.",
+      exampleRequest: (generatedOutput.httpMethod.toUpperCase() === 'POST' || generatedOutput.httpMethod.toUpperCase() === 'PUT') ? "{ \n  \"message\": \"This is a sample request body. Modify as needed for simulation.\"\n}" : undefined,
+      exampleResponse: generatedOutput.exampleResponse,
+    };
+  }
+
 
   return (
     <Form {...form}>
@@ -88,52 +102,70 @@ export function GenerateEndpointForm() {
             )}
           />
           {generatedOutput && (
-            <div className="space-y-4">
+            <div className="space-y-6 pt-4 mt-4 border-t">
               <div>
-                <h3 className="text-sm font-medium mb-1 flex items-center">
-                    <Network className="h-4 w-4 mr-2 text-accent" />
-                    Suggested Path & Method:
+                <h3 className="text-lg font-semibold mb-2 flex items-center text-primary">
+                    <Network className="h-5 w-5 mr-2" />
+                    Generated Endpoint Details
                 </h3>
-                <div className="flex items-center gap-2">
-                    <Badge variant={
-                        generatedOutput.httpMethod === 'GET' ? 'default' :
-                        generatedOutput.httpMethod === 'POST' ? 'secondary' : // Should be different colors
-                        generatedOutput.httpMethod === 'PUT' ? 'outline' : // Customize as needed
-                        generatedOutput.httpMethod === 'DELETE' ? 'destructive' : 'default' // Fallback
-                    }
-                    className={
-                        generatedOutput.httpMethod === 'GET' ? 'bg-blue-600 hover:bg-blue-700 text-white' :
-                        generatedOutput.httpMethod === 'POST' ? 'bg-green-600 hover:bg-green-700 text-white' :
-                        generatedOutput.httpMethod === 'PUT' ? 'bg-yellow-500 hover:bg-yellow-600 text-black' :
-                        generatedOutput.httpMethod === 'DELETE' ? 'bg-red-600 hover:bg-red-700 text-white' :
-                        'bg-gray-500 hover:bg-gray-600 text-white'
-                      }
-                    >
-                        {generatedOutput.httpMethod}
-                    </Badge>
-                    <p className="text-sm font-mono bg-muted p-2 rounded-md">{generatedOutput.suggestedPath}</p>
+                 <div className="space-y-1 mb-3">
+                    <p className="text-sm"><strong className="font-medium">HTTP Method:</strong>
+                        <Badge variant={
+                            generatedOutput.httpMethod === 'GET' ? 'default' :
+                            generatedOutput.httpMethod === 'POST' ? 'secondary' :
+                            generatedOutput.httpMethod === 'PUT' ? 'outline' :
+                            generatedOutput.httpMethod === 'DELETE' ? 'destructive' : 'default'
+                        }
+                        className={`ml-2 ${
+                            generatedOutput.httpMethod === 'GET' ? 'bg-blue-600 hover:bg-blue-700 text-white' :
+                            generatedOutput.httpMethod === 'POST' ? 'bg-green-600 hover:bg-green-700 text-white' :
+                            generatedOutput.httpMethod === 'PUT' ? 'bg-yellow-500 hover:bg-yellow-600 text-black' :
+                            generatedOutput.httpMethod === 'DELETE' ? 'bg-red-600 hover:bg-red-700 text-white' :
+                            'bg-gray-500 hover:bg-gray-600 text-white'
+                          }`}
+                        >
+                            {generatedOutput.httpMethod}
+                        </Badge>
+                    </p>
+                    <p className="text-sm"><strong className="font-medium">Suggested Path:</strong> <code className="text-sm bg-muted p-1 rounded-md ml-1">{generatedOutput.suggestedPath}</code></p>
                 </div>
-
               </div>
 
               <div>
-                <h3 className="text-sm font-medium mb-1 flex items-center">
+                <h4 className="text-md font-semibold mb-1 flex items-center">
                     <FileCode className="h-4 w-4 mr-2 text-accent" />
                     Generated Handler Code (for route.ts):
-                </h3>
+                </h4>
                 <CodeBlock code={generatedOutput.handlerFunctionCode} language="typescript" />
                 <p className="text-xs text-muted-foreground mt-1">
-                  To use this, create a <code className="text-xs bg-muted px-1 py-0.5 rounded">{generatedOutput.suggestedPath}/route.ts</code> file and paste this code.
+                  To make this endpoint live, create a <code className="text-xs bg-muted px-1 py-0.5 rounded">{generatedOutput.suggestedPath}/route.ts</code> file (creating parent directories if needed, e.g., <code className="text-xs bg-muted px-1 py-0.5 rounded">src/app/api{generatedOutput.suggestedPath}/route.ts</code>) and paste this code.
                 </p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium mb-1 flex items-center">
-                    <Package className="h-4 w-4 mr-2 text-accent" /> {/* Changed PackageOutput to Package */}
+                <h4 className="text-md font-semibold mb-1 flex items-center">
+                    <Package className="h-4 w-4 mr-2 text-accent" />
                     Example JSON Response:
-                </h3>
+                </h4>
                 <CodeBlock code={generatedOutput.exampleResponse} language="json" />
               </div>
+
+              {simulatedEndpoint && (
+                <Card className="mt-6 bg-background/50 border-dashed border-primary/50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center">
+                      <PlayCircle className="h-5 w-5 mr-2 text-primary" />
+                      Simulate Interaction
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      This uses the AI-generated example response. The endpoint is not live until you create the route file with the code above.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <InteractiveEndpoint endpoint={simulatedEndpoint} isSimulationOnly={true} />
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
         </CardContent>
@@ -148,3 +180,4 @@ export function GenerateEndpointForm() {
     </Form>
   );
 }
+

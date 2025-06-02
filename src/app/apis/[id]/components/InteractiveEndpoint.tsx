@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { CodeBlock } from '@/components/CodeBlock';
-import { Loader2, AlertCircle, ChevronRight } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronRight, PlayCircle } from 'lucide-react'; // Added PlayCircle
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,9 +15,10 @@ import { Badge } from '@/components/ui/badge';
 
 interface InteractiveEndpointProps {
   endpoint: ApiEndpoint;
+  isSimulationOnly?: boolean; // New prop for simulation mode
 }
 
-export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
+export function InteractiveEndpoint({ endpoint, isSimulationOnly = false }: InteractiveEndpointProps) {
   const [requestPath, setRequestPath] = useState(endpoint.path);
   const [requestBody, setRequestBody] = useState(
     (endpoint.method === 'POST' || endpoint.method === 'PUT') && endpoint.exampleRequest
@@ -48,6 +49,17 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
     setError(null);
     setStatusCode(null);
 
+    if (isSimulationOnly) {
+      // Simulate execution
+      setTimeout(() => { // Add a small delay for UX
+        setResponse(endpoint.exampleResponse);
+        setStatusCode(200); // Mock success
+        setIsLoading(false);
+      }, 300);
+      return;
+    }
+
+    // Real execution
     const options: RequestInit = {
       method: endpoint.method,
       headers: {},
@@ -68,11 +80,9 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
       if (!httpResponse.ok) {
         let errorBodyText: string;
         try {
-          // Try to parse error as JSON
           const errorData = await httpResponse.clone().json();
           errorBodyText = JSON.stringify(errorData, null, 2);
         } catch (jsonParseError) {
-          // If parsing error as JSON fails, get it as text
           try {
             errorBodyText = await httpResponse.text();
           } catch (textParseError) {
@@ -81,7 +91,6 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
         }
         setError(errorBodyText);
       } else {
-        // Try to parse success as JSON, fallback to text
         let successBodyText: string;
         try {
             const successData = await httpResponse.clone().json();
@@ -96,14 +105,12 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
         setResponse(successBodyText);
       }
     } catch (err) {
-      // This catch is mainly for network errors or if fetch itself fails catastrophically
       console.error("API call error:", err);
       let errorMessage = 'An unknown error occurred during the request.';
       if (err instanceof Error) {
         errorMessage = err.message;
       }
       setError(errorMessage);
-      // If httpResponse exists, we might have a status code even if reading body failed later
       setStatusCode(httpResponse ? httpResponse.status : null);
     } finally {
       setIsLoading(false);
@@ -148,9 +155,9 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
     <div className="space-y-4">
       {showPathInput && (
         <div className="space-y-1">
-          <Label htmlFor={`requestPath-${endpoint.path}`}>Request Path</Label>
+          <Label htmlFor={`requestPath-${endpoint.path}-${isSimulationOnly}`}>Request Path</Label>
           <Input
-            id={`requestPath-${endpoint.path}`}
+            id={`requestPath-${endpoint.path}-${isSimulationOnly}`}
             value={requestPath}
             onChange={(e) => setRequestPath(e.target.value)}
             placeholder={endpoint.path} 
@@ -167,13 +174,13 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
 
       {(endpoint.method === 'POST' || endpoint.method === 'PUT') && (
         <div className="space-y-1">
-          <Label htmlFor={`requestBody-${endpoint.path}`}>Request Body (JSON)</Label>
+          <Label htmlFor={`requestBody-${endpoint.path}-${isSimulationOnly}`}>Request Body (JSON)</Label>
           <Textarea
-            id={`requestBody-${endpoint.path}`}
+            id={`requestBody-${endpoint.path}-${isSimulationOnly}`}
             value={requestBody}
             onChange={(e) => setRequestBody(e.target.value)}
             rows={5}
-            placeholder='e.g., { "name": "John Doe" }'
+            placeholder={isSimulationOnly ? 'Enter JSON body for simulation (not sent to a live server)' : 'e.g., { "name": "John Doe" }'}
             className="font-mono text-sm"
             disabled={isLoading}
           />
@@ -182,7 +189,7 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
 
       <Button onClick={handleExecute} disabled={isLoading} className="w-full sm:w-auto">
         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Execute
+        {isSimulationOnly ? 'Simulate & Show Example Response' : 'Execute'}
         <ChevronRight className="ml-1 h-4 w-4" />
       </Button>
 
@@ -208,13 +215,13 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
          <Card className="border-green-500 bg-green-500/10 dark:border-green-400 dark:bg-green-400/10">
              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">
-                    Response
+                    Response {isSimulationOnly && "(Simulated)"}
                 </CardTitle>
                 {statusCode &&
                   <Badge
                     className={`text-xs ${statusCode >= 200 && statusCode < 300 ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} text-white`}
                   >
-                    {statusCode}
+                    {statusCode} {isSimulationOnly && " (Simulated)"}
                   </Badge>
                 }
             </CardHeader>
@@ -226,3 +233,4 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
     </div>
   );
 }
+
