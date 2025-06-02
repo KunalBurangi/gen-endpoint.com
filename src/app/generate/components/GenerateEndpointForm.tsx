@@ -57,6 +57,8 @@ export function GenerateEndpointForm() {
       if (error instanceof Error) {
         if (error.message.includes("API key not valid")) {
           description = "API key not valid. Please check your key in the API Key Manager section.";
+        } else if (error.message.includes("503") || error.message.toLowerCase().includes("model is overloaded") || error.message.toLowerCase().includes("service unavailable")) {
+          description = "The AI model is currently overloaded or unavailable. Please try again in a few moments.";
         } else if (error.message.includes("json")) {
             description = "The AI returned an invalid format. Please try again or rephrase your prompt.";
         }

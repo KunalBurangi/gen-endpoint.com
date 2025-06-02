@@ -61,8 +61,12 @@ export function GenerateSchemaForm() {
     } catch (error) {
       console.error("Error generating JSON schema:", error);
       let description = "Failed to generate JSON schema.";
-      if (error instanceof Error && error.message.includes("API key not valid")) {
-        description = "API key not valid. Please check your key in the API Key Manager section.";
+      if (error instanceof Error) {
+        if (error.message.includes("API key not valid")) {
+          description = "API key not valid. Please check your key in the API Key Manager section.";
+        } else if (error.message.includes("503") || error.message.toLowerCase().includes("model is overloaded") || error.message.toLowerCase().includes("service unavailable")) {
+          description = "The AI model is currently overloaded or unavailable. Please try again in a few moments.";
+        }
       }
       toast({ variant: "destructive", title: "Error", description });
     } finally {
@@ -109,3 +113,4 @@ export function GenerateSchemaForm() {
     </Form>
   );
 }
+
