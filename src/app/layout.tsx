@@ -8,8 +8,8 @@ import { Analytics } from "@vercel/analytics/react"
 
 
 export const metadata: Metadata = {
-  title: 'API Endpoint Explorer',
-  description: 'Discover and generate public API endpoints.',
+  title: 'My API Platform',
+  description: 'Create and manage your own API endpoints.',
 };
 
 export default function RootLayout({
