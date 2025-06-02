@@ -60,26 +60,51 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
     
     const fetchPath = requestPath.startsWith('/api/') ? requestPath : `/api${requestPath.startsWith('/') ? '' : '/'}${requestPath}`;
 
+    let httpResponse: Response | null = null;
     try {
-      const res = await fetch(fetchPath, options);
-      setStatusCode(res.status);
-      const responseData = await res.json();
-      if (!res.ok) {
-        setError(JSON.stringify(responseData, null, 2) || `Request failed with status ${res.status}`);
+      httpResponse = await fetch(fetchPath, options);
+      setStatusCode(httpResponse.status);
+
+      if (!httpResponse.ok) {
+        let errorBodyText: string;
+        try {
+          // Try to parse error as JSON
+          const errorData = await httpResponse.clone().json();
+          errorBodyText = JSON.stringify(errorData, null, 2);
+        } catch (jsonParseError) {
+          // If parsing error as JSON fails, get it as text
+          try {
+            errorBodyText = await httpResponse.text();
+          } catch (textParseError) {
+            errorBodyText = `Request failed with status ${httpResponse.status}, and error body could not be read.`;
+          }
+        }
+        setError(errorBodyText);
       } else {
-        setResponse(JSON.stringify(responseData, null, 2));
+        // Try to parse success as JSON, fallback to text
+        let successBodyText: string;
+        try {
+            const successData = await httpResponse.clone().json();
+            successBodyText = JSON.stringify(successData, null, 2);
+        } catch (jsonParseError) {
+            try {
+                successBodyText = await httpResponse.text();
+            } catch (textParseError) {
+                successBodyText = `Request succeeded with status ${httpResponse.status}, but response body could not be read.`;
+            }
+        }
+        setResponse(successBodyText);
       }
     } catch (err) {
+      // This catch is mainly for network errors or if fetch itself fails catastrophically
       console.error("API call error:", err);
-      let errorMessage = 'An unknown error occurred.';
+      let errorMessage = 'An unknown error occurred during the request.';
       if (err instanceof Error) {
         errorMessage = err.message;
-        if (err.message.toLowerCase().includes('invalid json') || err.message.toLowerCase().includes('unexpected token')) {
-            errorMessage = `Failed to parse response as JSON. The server might have returned an HTML page (e.g., a 404 not found) or non-JSON data. Original error: ${err.message}`;
-        }
       }
       setError(errorMessage);
-      setStatusCode(null); 
+      // If httpResponse exists, we might have a status code even if reading body failed later
+      setStatusCode(httpResponse ? httpResponse.status : null);
     } finally {
       setIsLoading(false);
     }
@@ -128,7 +153,7 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
             id={`requestPath-${endpoint.path}`}
             value={requestPath}
             onChange={(e) => setRequestPath(e.target.value)}
-            placeholder={endpoint.path} // Show the path with placeholders
+            placeholder={endpoint.path} 
             className="font-mono text-sm"
             disabled={isLoading}
           />
