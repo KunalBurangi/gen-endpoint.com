@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -12,11 +13,11 @@ import { CodeBlock } from "@/components/CodeBlock";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { generateJsonFromSchema, type GenerateJsonFromSchemaInput } from "@/ai/flows/generate-json-from-schema";
+import { getUserApiKey } from "./ApiKeyManager";
 
 const isValidJsonString = (str: string) => {
   try {
     const parsed = JSON.parse(str);
-    // Basic check for schema structure
     return typeof parsed === 'object' && parsed !== null && ('type' in parsed || 'properties' in parsed || '$schema' in parsed);
   } catch (e) {
     return false;
@@ -45,13 +46,25 @@ export function GenerateJsonForm() {
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setIsLoading(true);
     setJsonExample(null);
+    const userApiKey = getUserApiKey();
+    const inputData: GenerateJsonFromSchemaInput = {
+      jsonSchema: data.jsonSchema,
+    };
+    if (userApiKey) {
+      inputData.userApiKey = userApiKey;
+    }
+
     try {
-      const result = await generateJsonFromSchema(data as GenerateJsonFromSchemaInput);
+      const result = await generateJsonFromSchema(inputData);
       setJsonExample(result.jsonExample);
       toast({ title: "Success", description: "Example JSON generated." });
     } catch (error) {
       console.error("Error generating example JSON:", error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to generate example JSON." });
+      let description = "Failed to generate example JSON.";
+      if (error instanceof Error && error.message.includes("API key not valid")) {
+        description = "API key not valid. Please check your key in the API Key Manager section.";
+      }
+      toast({ variant: "destructive", title: "Error", description });
     } finally {
       setIsLoading(false);
     }

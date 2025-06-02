@@ -1,9 +1,11 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GenerateResponseForm } from "./components/GenerateResponseForm";
 import { GenerateSchemaForm } from "./components/GenerateSchemaForm";
 import { GenerateJsonForm } from "./components/GenerateJsonForm";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Bot } from "lucide-react";
+import { ApiKeyManager } from "./components/ApiKeyManager";
 
 export default function GeneratePage() {
   return (
@@ -21,6 +23,8 @@ export default function GeneratePage() {
           </div>
         </CardHeader>
       </Card>
+
+      <ApiKeyManager />
 
       <Tabs defaultValue="generate-response" className="w-full">
         <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-6">

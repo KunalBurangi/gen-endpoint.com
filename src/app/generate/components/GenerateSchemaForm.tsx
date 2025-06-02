@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -12,6 +13,7 @@ import { CodeBlock } from "@/components/CodeBlock";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { generateJsonSchema, type GenerateJsonSchemaInput } from "@/ai/flows/generate-json-schema";
+import { getUserApiKey } from "./ApiKeyManager";
 
 const isValidJsonString = (str: string) => {
   try {
@@ -44,13 +46,25 @@ export function GenerateSchemaForm() {
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setIsLoading(true);
     setJsonSchema(null);
+    const userApiKey = getUserApiKey();
+    const inputData: GenerateJsonSchemaInput = {
+      exampleJson: data.exampleJson,
+    };
+    if (userApiKey) {
+      inputData.userApiKey = userApiKey;
+    }
+    
     try {
-      const result = await generateJsonSchema(data as GenerateJsonSchemaInput);
+      const result = await generateJsonSchema(inputData);
       setJsonSchema(result.jsonSchema);
       toast({ title: "Success", description: "JSON Schema generated." });
     } catch (error) {
       console.error("Error generating JSON schema:", error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to generate JSON schema." });
+      let description = "Failed to generate JSON schema.";
+      if (error instanceof Error && error.message.includes("API key not valid")) {
+        description = "API key not valid. Please check your key in the API Key Manager section.";
+      }
+      toast({ variant: "destructive", title: "Error", description });
     } finally {
       setIsLoading(false);
     }

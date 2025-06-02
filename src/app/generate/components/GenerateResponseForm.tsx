@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -12,6 +13,7 @@ import { CodeBlock } from "@/components/CodeBlock";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { generateApiResponse, type GenerateApiResponseInput } from "@/ai/flows/generate-api-response";
+import { getUserApiKey } from "./ApiKeyManager";
 
 const FormSchema = z.object({
   prompt: z.string().min(10, { message: "Prompt must be at least 10 characters." }),
@@ -34,13 +36,25 @@ export function GenerateResponseForm() {
   const onSubmit: SubmitHandler<FormData> = async (data) => {
     setIsLoading(true);
     setApiResponse(null);
+    const userApiKey = getUserApiKey();
+    const inputData: GenerateApiResponseInput = { 
+      prompt: data.prompt,
+    };
+    if (userApiKey) {
+      inputData.userApiKey = userApiKey;
+    }
+
     try {
-      const result = await generateApiResponse(data as GenerateApiResponseInput);
+      const result = await generateApiResponse(inputData);
       setApiResponse(result.apiResponse);
       toast({ title: "Success", description: "API response generated." });
     } catch (error) {
       console.error("Error generating API response:", error);
-      toast({ variant: "destructive", title: "Error", description: "Failed to generate API response." });
+      let description = "Failed to generate API response.";
+      if (error instanceof Error && error.message.includes("API key not valid")) {
+        description = "API key not valid. Please check your key in the API Key Manager section.";
+      }
+      toast({ variant: "destructive", title: "Error", description });
     } finally {
       setIsLoading(false);
     }
