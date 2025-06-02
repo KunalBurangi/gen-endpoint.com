@@ -47,7 +47,7 @@ const generateJsonFromSchemaFlow = globalAi.defineFlow(
     if (input.userApiKey) {
       const customGenkit = genkit({ plugins: [googleAI({ apiKey: input.userApiKey })] });
       const response = await customGenkit.generate({
-        model: globalAi.getModel('googleai/gemini-2.0-flash'),
+        model: 'googleai/gemini-2.0-flash',
         prompt: `You are a expert Typescript developer.
   Generate a JSON example based on the following JSON schema:\n\n  ${input.jsonSchema}\n\n  The JSON should be valid and well-formatted.
   Ensure that the generated JSON adheres to the schema, including data types and required fields.`,
@@ -61,3 +61,4 @@ const generateJsonFromSchemaFlow = globalAi.defineFlow(
     }
   }
 );
+

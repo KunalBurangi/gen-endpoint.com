@@ -52,7 +52,7 @@ const generateJsonSchemaFlow = globalAi.defineFlow(
     if (input.userApiKey) {
       const customGenkit = genkit({ plugins: [googleAI({ apiKey: input.userApiKey })] });
       const response = await customGenkit.generate({
-        model: globalAi.getModel('googleai/gemini-2.0-flash'),
+        model: 'googleai/gemini-2.0-flash',
         prompt: `You are a tool that takes an example JSON response and generates a JSON schema representing its structure and data types.
 
   Example JSON Response:
@@ -70,3 +70,4 @@ const generateJsonSchemaFlow = globalAi.defineFlow(
     }
   }
 );
+

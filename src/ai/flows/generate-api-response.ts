@@ -47,7 +47,7 @@ const generateApiResponseFlow = globalAi.defineFlow(
     if (input.userApiKey) {
       const customGenkit = genkit({ plugins: [googleAI({ apiKey: input.userApiKey })] });
       const response = await customGenkit.generate({
-        model: globalAi.getModel('googleai/gemini-2.0-flash'), // Use same model for consistency
+        model: 'googleai/gemini-2.0-flash', // Use same model for consistency
         prompt: `You are an API response generator.  You will generate a sample API response in JSON format based on the user-provided prompt. Ensure that the response is valid JSON.\n\nPrompt: ${input.prompt}`,
         output: { schema: GenerateApiResponseOutputSchema },
         config: originalPrompt.config // Use config from original prompt if any (e.g. safetySettings)
@@ -60,3 +60,4 @@ const generateApiResponseFlow = globalAi.defineFlow(
     }
   }
 );
+
