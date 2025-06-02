@@ -37,15 +37,24 @@ export function GenerateEndpointForm() {
   });
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
+    const userApiKey = getUserApiKey();
+
+    if (!userApiKey) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "A Google AI API key is required. Please provide one in the API Key Manager section above.",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setGeneratedOutput(null);
-    const userApiKey = getUserApiKey();
-    const inputData: GenerateApiEndpointInput = { 
+
+    const inputData: GenerateApiEndpointInput = {
       prompt: data.prompt,
+      userApiKey: userApiKey, // userApiKey is now guaranteed to be present
     };
-    if (userApiKey) {
-      inputData.userApiKey = userApiKey;
-    }
 
     try {
       const result = await generateApiEndpoint(inputData);
@@ -70,11 +79,11 @@ export function GenerateEndpointForm() {
       setIsLoading(false);
     }
   };
-  
+
   let simulatedEndpoint: ApiEndpoint | null = null;
   if (generatedOutput) {
     simulatedEndpoint = {
-      method: generatedOutput.httpMethod.toUpperCase() as ApiEndpoint['method'], 
+      method: generatedOutput.httpMethod.toUpperCase() as ApiEndpoint['method'],
       path: generatedOutput.suggestedPath,
       description: "This is a simulation for the AI-generated endpoint. This endpoint is not live until you create its route file.",
       exampleRequest: (generatedOutput.httpMethod.toUpperCase() === 'POST' || generatedOutput.httpMethod.toUpperCase() === 'PUT') ? "{ \n  \"message\": \"This is a sample request body. Modify as needed for simulation.\"\n}" : undefined,
@@ -121,10 +130,10 @@ export function GenerateEndpointForm() {
                             generatedOutput.httpMethod === 'DELETE' ? 'destructive' : 'default'
                         }
                         className={`ml-2 ${
-                            generatedOutput.httpMethod === 'GET' ? 'bg-blue-600 hover:bg-blue-700 text-white' :
-                            generatedOutput.httpMethod === 'POST' ? 'bg-green-600 hover:bg-green-700 text-white' :
-                            generatedOutput.httpMethod === 'PUT' ? 'bg-yellow-500 hover:bg-yellow-600 text-black' :
-                            generatedOutput.httpMethod === 'DELETE' ? 'bg-red-600 hover:bg-red-700 text-white' :
+                            generatedOutput.httpMethod.toUpperCase() === 'GET' ? 'bg-blue-600 hover:bg-blue-700 text-white' :
+                            generatedOutput.httpMethod.toUpperCase() === 'POST' ? 'bg-green-600 hover:bg-green-700 text-white' :
+                            generatedOutput.httpMethod.toUpperCase() === 'PUT' ? 'bg-yellow-500 hover:bg-yellow-600 text-black' :
+                            generatedOutput.httpMethod.toUpperCase() === 'DELETE' ? 'bg-red-600 hover:bg-red-700 text-white' :
                             'bg-gray-500 hover:bg-gray-600 text-white'
                           }`}
                         >

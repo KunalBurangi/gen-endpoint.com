@@ -44,16 +44,25 @@ export function GenerateSchemaForm() {
   });
 
   const onSubmit: SubmitHandler<FormData> = async (data) => {
+    const userApiKey = getUserApiKey();
+
+    if (!userApiKey) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "A Google AI API key is required. Please provide one in the API Key Manager section above.",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setJsonSchema(null);
-    const userApiKey = getUserApiKey();
+
     const inputData: GenerateJsonSchemaInput = {
       exampleJson: data.exampleJson,
+      userApiKey: userApiKey, // userApiKey is now guaranteed to be present
     };
-    if (userApiKey) {
-      inputData.userApiKey = userApiKey;
-    }
-    
+
     try {
       const result = await generateJsonSchema(inputData);
       setJsonSchema(result.jsonSchema);
