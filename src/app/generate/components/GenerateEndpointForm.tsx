@@ -11,7 +11,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { CodeBlock } from "@/components/CodeBlock";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Network, Settings, FileCode, Package, PlayCircle } from "lucide-react";
+import { Loader2, Network, Settings, FileCode, Package, PlayCircle, Zap } from "lucide-react"; // Added Zap
 import { generateApiEndpoint, type GenerateApiEndpointInput, type GenerateApiEndpointOutput } from "@/ai/flows/generate-api-endpoint";
 import type { ApiEndpoint } from '@/data/apis';
 import { InteractiveEndpoint } from "@/app/apis/[id]/components/InteractiveEndpoint";
@@ -27,6 +27,7 @@ type FormData = z.infer<typeof FormSchema>;
 export function GenerateEndpointForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedOutput, setGeneratedOutput] = useState<GenerateApiEndpointOutput | null>(null);
+  const [originalUserPrompt, setOriginalUserPrompt] = useState<string>(""); // Store original prompt
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -50,6 +51,7 @@ export function GenerateEndpointForm() {
 
     setIsLoading(true);
     setGeneratedOutput(null);
+    setOriginalUserPrompt(data.prompt); // Store the original prompt
 
     const inputData: GenerateApiEndpointInput = {
       prompt: data.prompt,
@@ -70,9 +72,9 @@ export function GenerateEndpointForm() {
           description = "API key not valid. Please check your key in the API Key Manager section.";
         } else if (error.message.includes("503") || error.message.toLowerCase().includes("model is overloaded") || error.message.toLowerCase().includes("service unavailable")) {
           description = "The AI model is currently overloaded or unavailable. Please try again in a few moments.";
-        } else if (error.message.includes("AI response could not be parsed")) {
-          description = "The AI returned a response that couldn't be understood. Please try rephrasing your prompt or try again later.";
-        } else if (error.message.includes("json")) { // Kept as a fallback for other JSON issues
+        } else if (error.message.includes("AI response could not be parsed") || error.message.includes("AI generated data that was not valid JSON")) {
+          description = "The AI returned a response that couldn't be understood or was not valid JSON. Please try rephrasing your prompt or try again later.";
+        } else if (error.message.includes("json")) { 
             description = "The AI returned an invalid format. Please try again or rephrase your prompt.";
         }
       }
@@ -92,6 +94,23 @@ export function GenerateEndpointForm() {
       exampleResponse: generatedOutput.exampleResponse,
     };
   }
+
+  let runtimeEndpointUrl = "";
+  let runtimeEndpointSlug = "";
+  if (generatedOutput && generatedOutput.suggestedPath) {
+    runtimeEndpointSlug = generatedOutput.suggestedPath.startsWith('/api/')
+      ? generatedOutput.suggestedPath.substring(5)
+      : generatedOutput.suggestedPath.startsWith('/')
+      ? generatedOutput.suggestedPath.substring(1)
+      : generatedOutput.suggestedPath;
+    if (runtimeEndpointSlug) {
+      runtimeEndpointUrl = `/api/runtime/${runtimeEndpointSlug}?user_query=${encodeURIComponent(originalUserPrompt)}`;
+    }
+  }
+  
+  const curlExample = runtimeEndpointUrl && getUserApiKey() 
+    ? `curl -X GET "${window.location.origin}${runtimeEndpointUrl}" -H "X-Goog-Api-Key: ${getUserApiKey()}"`
+    : `curl -X GET "${window.location.origin}/api/runtime/your-path?user_query=your_prompt" -H "X-Goog-Api-Key: YOUR_GOOGLE_AI_KEY"`;
 
 
   return (
@@ -153,14 +172,14 @@ export function GenerateEndpointForm() {
                 </h4>
                 <CodeBlock code={generatedOutput.handlerFunctionCode} language="typescript" />
                 <p className="text-xs text-muted-foreground mt-1">
-                  To make this endpoint live, create a <code className="text-xs bg-muted px-1 py-0.5 rounded">{generatedOutput.suggestedPath}/route.ts</code> file (creating parent directories if needed, e.g., <code className="text-xs bg-muted px-1 py-0.5 rounded">src/app/api{generatedOutput.suggestedPath}/route.ts</code>) and paste this code.
+                  To make this endpoint live, create a <code className="text-xs bg-muted px-1 py-0.5 rounded">{`src/app${generatedOutput.suggestedPath}/route.ts`}</code> file (creating parent directories if needed, e.g., <code className="text-xs bg-muted px-1 py-0.5 rounded">{`src/app/api${generatedOutput.suggestedPath.startsWith('/') ? '' : '/'}${generatedOutput.suggestedPath}/route.ts`}</code>) and paste this code.
                 </p>
               </div>
 
               <div>
                 <h4 className="text-md font-semibold mb-1 flex items-center">
                     <Package className="h-4 w-4 mr-2 text-accent" />
-                    Example JSON Response:
+                    Example JSON Response (from generated code):
                 </h4>
                 <CodeBlock code={generatedOutput.exampleResponse} language="json" />
               </div>
@@ -170,10 +189,10 @@ export function GenerateEndpointForm() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center">
                       <PlayCircle className="h-5 w-5 mr-2 text-primary" />
-                      Simulate Interaction
+                      Simulate Generated Code
                     </CardTitle>
                     <CardDescription className="text-xs">
-                      This uses the AI-generated example response. The endpoint is not live until you create the route file with the code above.
+                      This uses the AI-generated example response above to simulate the behavior of the generated handler code. This endpoint is not live until you create the route file.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -181,6 +200,37 @@ export function GenerateEndpointForm() {
                   </CardContent>
                 </Card>
               )}
+
+              {runtimeEndpointUrl && (
+                <Card className="mt-6 border-accent/50 bg-accent/5">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center text-accent">
+                      <Zap className="h-5 w-5 mr-2" />
+                      Experimental: Live AI Runtime Endpoint
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      You can test fetching dynamic, AI-generated data based on your original prompt using a special runtime endpoint. This endpoint doesn't use the handler code above but generates data live using AI.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <p className="text-sm font-medium">Runtime Endpoint URL (GET):</p>
+                    <code className="text-sm bg-muted p-1 rounded-md block break-all">{`${window.location.origin}${runtimeEndpointUrl}`}</code>
+                    <p className="text-sm mt-2 font-medium">Instructions for Postman/curl:</p>
+                    <ol className="list-decimal list-inside text-xs space-y-1 text-muted-foreground">
+                      <li>Make a GET request to the URL above.</li>
+                      <li>You <strong>MUST</strong> include your Google AI API Key as a request header: <code className="text-xs bg-muted px-1 py-0.5 rounded">X-Goog-Api-Key: YOUR_API_KEY</code>.</li>
+                      <li>The <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code> parameter in the URL should be your original prompt (it's already URL-encoded in the example URL).</li>
+                    </ol>
+                    <p className="text-sm mt-2 font-medium">Example <code className="text-xs bg-muted px-1 py-0.5 rounded">curl</code> command:</p>
+                    <CodeBlock code={curlExample} language="bash" />
+                     <p className="text-xs text-muted-foreground mt-1">
+                      Note: Replace <code className="text-xs bg-muted px-1 py-0.5 rounded">YOUR_API_KEY</code> with your actual key if you haven't saved it in the API Key Manager.
+                      The live runtime endpoint's response depends on the AI's interpretation of your <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code> and may differ from the "Example JSON Response" shown for the generated code.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
             </div>
           )}
         </CardContent>
@@ -195,4 +245,3 @@ export function GenerateEndpointForm() {
     </Form>
   );
 }
-
