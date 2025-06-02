@@ -33,8 +33,8 @@ let products = [
     id: "prod_789",
     name: "Ergonomic Mechanical Keyboard",
     category: "Electronics",
-    price": 159.99,
-    stock": 50,
+    "price": 159.99,
+    "stock": 50,
     imageUrl: "https://placehold.co/300x200.png",
     description: "Clicky and comfortable.",
     details: {"switchType": "Cherry MX Brown", "layout": "Tenkeyless"},
@@ -57,3 +57,4 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
 }
 
 // Note: PUT and DELETE for specific products would go here as well in a full implementation.
+

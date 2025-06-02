@@ -29,8 +29,8 @@ let products = [
     id: "prod_789",
     name: "Ergonomic Mechanical Keyboard",
     category: "Electronics",
-    price": 159.99,
-    stock": 0, // Example of out of stock
+    "price": 159.99,
+    "stock": 0, // Example of out of stock
     imageUrl: "https://placehold.co/300x200.png",
     description: "Clicky and comfortable.",
     details: {"switchType": "Cherry MX Brown", "layout": "Tenkeyless"},
@@ -81,3 +81,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body or error creating product." }, { status: 400 });
   }
 }
+
