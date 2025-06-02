@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -26,18 +27,25 @@ export function CodeBlock({ code, language = "json", className }: CodeBlockProps
   let formattedCode = code;
   if (language === "json") {
     try {
-      const parsedJson = JSON.parse(code);
-      formattedCode = JSON.stringify(parsedJson, null, 2);
+      // Attempt to parse and re-stringify only if it looks like a JSON object or array
+      if (code.trim().startsWith("{") || code.trim().startsWith("[")) {
+        const parsedJson = JSON.parse(code);
+        formattedCode = JSON.stringify(parsedJson, null, 2);
+      } else {
+        // If it's not starting with { or [, treat as pre-formatted or non-JSON string.
+        // This could be for simple strings or already formatted JSON needing preservation.
+        formattedCode = code;
+      }
     } catch (error) {
       // If parsing fails, use the original code string
-      // This might happen if the code is not valid JSON
-      console.warn("CodeBlock received non-JSON string for language 'json':", code.substring(0,100));
+      console.warn("CodeBlock received potentially non-JSON string for language 'json':", code.substring(0,100));
+      formattedCode = code; // Fallback to original code
     }
   }
 
 
   return (
-    <div className={`relative rounded-md bg-muted/50 p-4 my-4 border ${className}`}>
+    <div className={`relative rounded-md bg-muted/50 p-4 my-2 border ${className}`}>
       <Button
         variant="ghost"
         size="icon"
