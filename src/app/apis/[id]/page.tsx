@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CodeBlock } from '@/components/CodeBlock';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, ExternalLink, Terminal, Info, Layers, Binary, FileInput, FileOutput } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Terminal, Info, Layers, FileInput, FileOutput } from 'lucide-react';
 
 interface ApiDetailPageProps {
   params: { id: string };
@@ -73,9 +73,9 @@ export default async function ApiDetailPage({ params }: ApiDetailPageProps) {
             API Endpoints & Usage
           </CardTitle>
           <CardDescription>
-            Explore the available endpoints for the {api.name}. 
-            These paths are relative to your application's base URL (e.g., if your app is at <code>http://localhost:3000</code>, then <code>/api/greeting</code> would be <code>http://localhost:3000/api/greeting</code>).
-            You can use tools like <code>curl</code>, Postman, or your browser's address bar (for GET requests) to interact with them once implemented.
+            Explore the available endpoints for the {api.name}. These API routes are now live!
+            The paths shown below are relative to your application's base URL (e.g., if your app is at <code>http://localhost:3000</code>, then <code>/api/greeting</code> would be <code>http://localhost:3000/api/greeting</code>).
+            You can use tools like <code>curl</code>, Postman, or your browser's address bar (for GET requests) to interact with them.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
