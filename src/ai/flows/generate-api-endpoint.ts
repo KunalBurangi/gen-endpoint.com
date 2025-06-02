@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview An AI agent that generates a Next.js API endpoint (path, method, handler code, example response) based on a user-provided prompt.
+ * @fileOverview An AI agent that generates a Next.js API endpoint (path, method, handler code, example response, and example request body) based on a user-provided prompt.
  *
  * - generateApiEndpoint - A function that handles the generation of the API endpoint details.
  * - GenerateApiEndpointInput - The input type for the generateApiEndpoint function.
@@ -24,6 +24,7 @@ const GenerateApiEndpointOutputSchema = z.object({
   suggestedPath: z.string().describe("A suggested URL path for the new API endpoint, e.g., /api/items or /api/users/{userId}/profile. It should start with /api/."),
   httpMethod: z.string().describe("The suggested HTTP method for the endpoint, e.g., GET, POST, PUT, DELETE."),
   handlerFunctionCode: z.string().describe("The full TypeScript code for the Next.js App Router API route handler function (typically for a 'route.ts' file). This should include necessary imports like 'NextResponse' from 'next/server', and the 'export async function METHOD(request) { ... }' structure. The response should be returned using NextResponse.json(...). If the prompt implies data storage or complex logic, generate a functional, self-contained mock or simple in-memory example."),
+  exampleRequestBody: z.string().optional().describe("Optional. A valid JSON string representing an example request body that the generated 'handlerFunctionCode' would expect. This is primarily for POST, PUT, or PATCH methods. If the method is GET or DELETE, or if no body is typically required, this can be omitted or be an empty string."),
   exampleResponse: z.string().describe("A valid JSON string representing an example response that the generated handlerFunctionCode would produce.")
 });
 export type GenerateApiEndpointOutput = z.infer<typeof GenerateApiEndpointOutputSchema>;
@@ -39,6 +40,7 @@ Ensure the 'handlerFunctionCode' is complete and runnable for a 'route.ts' file 
 It should handle the specified HTTP method and return a JSON response using 'NextResponse.json()'.
 If the prompt implies data (e.g., "list of users"), create a small, self-contained in-memory array or object for the data within the handler.
 The 'suggestedPath' should always start with '/api/'.
+For 'exampleRequestBody', provide a valid JSON string if the HTTP method is POST, PUT, or PATCH and a body is expected by your generated 'handlerFunctionCode'. If no body is expected (e.g., for GET/DELETE or simple POSTs), omit this field or provide an empty string.
 The 'exampleResponse' should be a direct JSON string example of what the 'handlerFunctionCode' would output.
 The 'httpMethod' should be one of GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD.
 
@@ -47,14 +49,15 @@ Schema for your JSON output:
   "suggestedPath": "string (e.g., /api/items, /api/users/{userId}/profile)",
   "httpMethod": "string (e.g., GET, POST, PUT, DELETE)",
   "handlerFunctionCode": "string (Full TypeScript code for a Next.js 'route.ts' file, including imports and the async handler function like 'export async function GET(request) { ... }'. Focus on clarity and correctness. For example, if the user asks for an endpoint for 'random products', generate a few product objects directly in the code.)",
+  "exampleRequestBody": "string (Optional. A valid JSON string representing an example request body that the generated 'handlerFunctionCode' would expect. This is primarily for POST, PUT, or PATCH methods. If the method is GET or DELETE, or if no body is typically required, this can be omitted or be an empty string.)",
   "exampleResponse": "string (A valid JSON string example of the response from the generated code.)"
 }
 `;
 
-// originalPrompt is useful for its schema definitions for Genkit tooling, even if not directly called for generation without a user key.
+// originalPrompt is useful for its schema definitions for Genkit tooling, even if not directly called.
 const originalPrompt = globalAi.definePrompt({
   name: 'generateApiEndpointPrompt',
-  input: { schema: GenerateApiEndpointInputSchema.omit({ userApiKey: true }) },
+  input: { schema: GenerateApiEndpointInputSchema.omit({ userApiKey: true }) }, // userApiKey is handled in the flow
   output: { schema: GenerateApiEndpointOutputSchema },
   system: systemPrompt,
   prompt: `User Prompt: {{{prompt}}}`,
@@ -88,4 +91,3 @@ const generateApiEndpointFlow = globalAi.defineFlow(
     return output;
   }
 );
-

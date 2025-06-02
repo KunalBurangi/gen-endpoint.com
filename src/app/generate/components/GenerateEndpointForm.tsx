@@ -76,7 +76,7 @@ export function GenerateEndpointForm() {
           description = "API key not valid. Please check your key in the API Key Manager section.";
         } else if (error.message.includes("503") || error.message.toLowerCase().includes("model is overloaded") || error.message.toLowerCase().includes("service unavailable")) {
           description = "The AI model is currently overloaded or unavailable. Please try again in a few moments.";
-        } else if (error.message.includes("AI response could not be parsed") || error.message.includes("AI generated data that was not valid JSON") || error.message.includes("AI response was empty or could not be parsed to the GenerateApiEndpointOutputSchema")) {
+        } else if (error.message.includes("AI response could not be parsed") || error.message.includes("AI generated data that was not valid JSON") || error.message.includes("AI response was empty or could not be parsed to the GenerateApiEndpointOutputSchema") || error.message.includes("AI message")) {
             description = "The AI returned data that couldn't be processed as valid JSON or was empty. Try rephrasing your query or ensure the AI can generate valid JSON for your prompt.";
         }
       }
@@ -88,11 +88,30 @@ export function GenerateEndpointForm() {
 
   let simulatedEndpoint: ApiEndpoint | null = null;
   if (generatedOutput) {
+    let exampleRequestBodyForSimulation: string | undefined = undefined;
+    const method = generatedOutput.httpMethod.toUpperCase();
+    if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
+      if (generatedOutput.exampleRequestBody && generatedOutput.exampleRequestBody.trim() !== "" && generatedOutput.exampleRequestBody.trim() !== "{}") {
+        try {
+          // Validate and format JSON
+          const parsedJson = JSON.parse(generatedOutput.exampleRequestBody);
+          exampleRequestBodyForSimulation = JSON.stringify(parsedJson, null, 2);
+        } catch (e) {
+          // If AI provides invalid JSON for request body, use a fallback
+          console.warn("AI provided invalid JSON for exampleRequestBody:", generatedOutput.exampleRequestBody);
+          exampleRequestBodyForSimulation = '{\n  "key": "value",\n  "note": "AI-provided request body was invalid. Modify this sample body as needed for simulation."\n}';
+        }
+      } else {
+        // Fallback if AI doesn't provide a specific one, or provides an empty one.
+        exampleRequestBodyForSimulation = '{\n  "key": "value",\n  "note": "AI did not provide a specific request body. Modify this sample body as needed for simulation."\n}';
+      }
+    }
+
     simulatedEndpoint = {
-      method: generatedOutput.httpMethod.toUpperCase() as ApiEndpoint['method'],
+      method: method as ApiEndpoint['method'],
       path: generatedOutput.suggestedPath,
       description: "This is a simulation for the AI-generated endpoint. This endpoint is not live until you create its route file.",
-      exampleRequest: (generatedOutput.httpMethod.toUpperCase() === 'POST' || generatedOutput.httpMethod.toUpperCase() === 'PUT') ? "{ \n  \"message\": \"This is a sample request body. Modify as needed for simulation.\"\n}" : undefined,
+      exampleRequest: exampleRequestBodyForSimulation,
       exampleResponse: generatedOutput.exampleResponse,
     };
   }
@@ -114,26 +133,36 @@ export function GenerateEndpointForm() {
         
         let command = "";
         const method = generatedOutput.httpMethod.toUpperCase();
-        const exampleBody = '{\n  "message": "Sample JSON body. The AI will use this if provided."\n}';
+        // Use AI-provided exampleRequestBody if available and method needs a body, otherwise a generic one.
+        let exampleBodyForCurl = '{\n  "note": "Replace with your JSON body if needed for POST/PUT/PATCH."\n}';
+        if ((method === 'POST' || method === 'PUT' || method === 'PATCH') && generatedOutput.exampleRequestBody && generatedOutput.exampleRequestBody.trim() !== "" && generatedOutput.exampleRequestBody.trim() !== "{}") {
+            try {
+                const parsed = JSON.parse(generatedOutput.exampleRequestBody);
+                exampleBodyForCurl = JSON.stringify(parsed, null, 2); // Formatted for curl
+            } catch (e) {
+                // Keep generic if AI's is invalid
+            }
+        }
+
 
         switch (method) {
           case 'GET':
             command = `curl -X GET "${origin}${runtimeUrlBase}" ${apiKeyHeader}`;
             break;
           case 'POST':
-            command = `curl -X POST "${origin}${runtimeUrlBase}" ${apiKeyHeader} ${contentTypeHeader} -d '${exampleBody}'`;
+            command = `curl -X POST "${origin}${runtimeUrlBase}" ${apiKeyHeader} ${contentTypeHeader} -d '${exampleBodyForCurl}'`;
             break;
           case 'PUT':
-            command = `curl -X PUT "${origin}${runtimeUrlBase}" ${apiKeyHeader} ${contentTypeHeader} -d '${exampleBody}'`;
+            command = `curl -X PUT "${origin}${runtimeUrlBase}" ${apiKeyHeader} ${contentTypeHeader} -d '${exampleBodyForCurl}'`;
             break;
           case 'PATCH':
-            command = `curl -X PATCH "${origin}${runtimeUrlBase}" ${apiKeyHeader} ${contentTypeHeader} -d '${exampleBody}'`;
+            command = `curl -X PATCH "${origin}${runtimeUrlBase}" ${apiKeyHeader} ${contentTypeHeader} -d '${exampleBodyForCurl}'`;
             break;
           case 'DELETE':
             command = `curl -X DELETE "${origin}${runtimeUrlBase}" ${apiKeyHeader}`;
             break;
           default:
-            command = `# AI generated an HTTP method (${method}) not currently supported by the live runtime tester.`;
+            command = `# AI generated an HTTP method (${method}) not currently supported by the live runtime tester example. You can still test it manually.`;
         }
         setDynamicCurlCommand(command);
         setDisplayedRuntimeUrl(`${origin}${runtimeUrlBase}`);
@@ -206,9 +235,19 @@ export function GenerateEndpointForm() {
                 </h4>
                 <CodeBlock code={generatedOutput.handlerFunctionCode} language="typescript" />
                 <p className="text-xs text-muted-foreground mt-1">
-                  To make this endpoint live, create a <code className="text-xs bg-muted px-1 py-0.5 rounded">{`src/app${generatedOutput.suggestedPath.startsWith('/api/') ? generatedOutput.suggestedPath.substring(4) : generatedOutput.suggestedPath}/route.ts`}</code> file (creating parent directories if needed, e.g., <code className="text-xs bg-muted px-1 py-0.5 rounded">{`src/app/api${generatedOutput.suggestedPath.startsWith('/') ? '' : '/'}${generatedOutput.suggestedPath}/route.ts`}</code>) and paste this code.
+                  To make this endpoint live, create a <code className="text-xs bg-muted px-1 py-0.5 rounded">{`src/app${generatedOutput.suggestedPath}/route.ts`}</code> file (creating parent directories if needed) and paste this code.
                 </p>
               </div>
+
+              {generatedOutput.exampleRequestBody && generatedOutput.exampleRequestBody.trim() !== "" && (
+                <div>
+                  <h4 className="text-md font-semibold mb-1 flex items-center">
+                      <Package className="h-4 w-4 mr-2 text-accent" />
+                      Example JSON Request Body (for generated code):
+                  </h4>
+                  <CodeBlock code={generatedOutput.exampleRequestBody} language="json" />
+                </div>
+              )}
 
               <div>
                 <h4 className="text-md font-semibold mb-1 flex items-center">
@@ -226,7 +265,7 @@ export function GenerateEndpointForm() {
                       Simulate Generated Code
                     </CardTitle>
                     <CardDescription className="text-xs">
-                      This uses the AI-generated example response above to simulate the behavior of the generated handler code. This endpoint is not live until you create the route file.
+                      This uses the AI-generated example response and potentially an example request body to simulate the behavior of the generated handler code. This endpoint is not live until you create the route file.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -243,7 +282,7 @@ export function GenerateEndpointForm() {
                       Experimental: Live AI Runtime Endpoint
                     </CardTitle>
                     <CardDescription className="text-xs">
-                      Test fetching dynamic, AI-generated data based on your original prompt using a special runtime endpoint. This endpoint doesn&apos;t use the handler code above but generates data live using AI, considering the HTTP method.
+                      Test fetching dynamic, AI-generated data based on your original prompt using a special runtime endpoint. This endpoint doesn&apos;t use the handler code above but generates data live using AI, considering the HTTP method and an optional request body.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
@@ -256,9 +295,9 @@ export function GenerateEndpointForm() {
                       <li>Make a {generatedOutput.httpMethod.toUpperCase()} request to the URL above.</li>
                       <li>You <strong>MUST</strong> include your Google AI API Key as a request header: <code className="text-xs bg-muted px-1 py-0.5 rounded">X-Goog-Api-Key: YOUR_API_KEY</code>.</li>
                       {['POST', 'PUT', 'PATCH'].includes(generatedOutput.httpMethod.toUpperCase()) && (
-                        <li>For {generatedOutput.httpMethod.toUpperCase()}, include a JSON body with your request. The AI will consider this body. The example `curl` command provides a sample.</li>
+                        <li>For {generatedOutput.httpMethod.toUpperCase()}, include a JSON body with your request. The AI will consider this body. The example `curl` command provides a sample derived from the AI's example request body if available, or a generic placeholder.</li>
                       )}
-                      <li>The <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code> parameter in the URL should be your original prompt (it's already URL-encoded in the example URL).</li>
+                      <li>The <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code> parameter in the URL should be your original prompt (it&apos;s already URL-encoded in the example URL).</li>
                     </ol>
                     <p className="text-sm mt-2 font-medium">Example <code className="text-xs bg-muted px-1 py-0.5 rounded">curl</code> command:</p>
                     <CodeBlock code={dynamicCurlCommand} language="bash" />
