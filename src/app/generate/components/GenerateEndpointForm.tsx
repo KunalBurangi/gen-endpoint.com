@@ -11,7 +11,7 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { CodeBlock } from "@/components/CodeBlock";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Network, Settings, FileCode, PackageOutput } from "lucide-react";
+import { Loader2, Network, Settings, FileCode, Package } from "lucide-react"; // Changed PackageOutput to Package
 import { generateApiEndpoint, type GenerateApiEndpointInput, type GenerateApiEndpointOutput } from "@/ai/flows/generate-api-endpoint";
 import { getUserApiKey } from "./ApiKeyManager";
 import { Badge } from "@/components/ui/badge";
@@ -129,7 +129,7 @@ export function GenerateEndpointForm() {
 
               <div>
                 <h3 className="text-sm font-medium mb-1 flex items-center">
-                    <PackageOutput className="h-4 w-4 mr-2 text-accent" />
+                    <Package className="h-4 w-4 mr-2 text-accent" /> {/* Changed PackageOutput to Package */}
                     Example JSON Response:
                 </h3>
                 <CodeBlock code={generatedOutput.exampleResponse} language="json" />
