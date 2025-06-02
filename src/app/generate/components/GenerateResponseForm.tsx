@@ -1,101 +1,82 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GenerateEndpointForm } from "./components/GenerateEndpointForm"; // Renamed
+import { GenerateSchemaForm } from "./components/GenerateSchemaForm";
+import { GenerateJsonForm } from "./components/GenerateJsonForm";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Bot, PencilRuler, FileJson, FileInput } from "lucide-react"; // Added more icons
+import { ApiKeyManager } from "./components/ApiKeyManager";
 
-"use client";
-
-import { useState } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { CardContent, CardFooter } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CodeBlock } from "@/components/CodeBlock";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
-import { generateApiResponse, type GenerateApiResponseInput } from "@/ai/flows/generate-api-response";
-import { getUserApiKey } from "./ApiKeyManager";
-
-const FormSchema = z.object({
-  prompt: z.string().min(10, { message: "Prompt must be at least 10 characters." }),
-});
-
-type FormData = z.infer<typeof FormSchema>;
-
-export function GenerateResponseForm() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiResponse, setApiResponse] = useState<string | null>(null);
-  const { toast } = useToast();
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
-      prompt: "",
-    },
-  });
-
-  const onSubmit: SubmitHandler<FormData> = async (data) => {
-    setIsLoading(true);
-    setApiResponse(null);
-    const userApiKey = getUserApiKey();
-    const inputData: GenerateApiResponseInput = { 
-      prompt: data.prompt,
-    };
-    if (userApiKey) {
-      inputData.userApiKey = userApiKey;
-    }
-
-    try {
-      const result = await generateApiResponse(inputData);
-      setApiResponse(result.apiResponse);
-      toast({ title: "Success", description: "API response generated." });
-    } catch (error) {
-      console.error("Error generating API response:", error);
-      let description = "Failed to generate API response.";
-      if (error instanceof Error && error.message.includes("API key not valid")) {
-        description = "API key not valid. Please check your key in the API Key Manager section.";
-      }
-      toast({ variant: "destructive", title: "Error", description });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+export default function GeneratePage() {
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
-          <FormField
-            control={form.control}
-            name="prompt"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Describe your desired API response:</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="e.g., A list of 3 products, each with an id, name, price, and category. Price should be a number, name a string."
-                    rows={5}
-                    {...field}
-                    disabled={isLoading}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {apiResponse && (
+    <div className="space-y-8">
+      <Card className="shadow-md">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Bot className="h-10 w-10 text-primary" />
             <div>
-              <h3 className="text-sm font-medium mb-1">Generated API Response:</h3>
-              <CodeBlock code={apiResponse} language="json" />
+              <CardTitle className="text-3xl font-bold font-headline text-primary">AI-Powered API Tools</CardTitle>
+              <CardDescription className="text-lg mt-1">
+                Generate API endpoint code, JSON schemas, and example JSON using AI.
+              </CardDescription>
             </div>
-          )}
-        </CardContent>
-        <CardFooter>
-          <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Generate Response
-          </Button>
-        </CardFooter>
-      </form>
-    </Form>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <ApiKeyManager />
+
+      <Tabs defaultValue="generate-endpoint" className="w-full">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-6">
+          <TabsTrigger value="generate-endpoint">
+            <PencilRuler className="h-4 w-4 mr-2" />
+            Endpoint from Prompt
+          </TabsTrigger>
+          <TabsTrigger value="generate-schema">
+            <FileJson className="h-4 w-4 mr-2" />
+            Schema from JSON
+          </TabsTrigger>
+          <TabsTrigger value="generate-json">
+            <FileInput className="h-4 w-4 mr-2" />
+            JSON from Schema
+            </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="generate-endpoint">
+          <Card>
+            <CardHeader>
+              <CardTitle>Generate API Endpoint from Prompt</CardTitle>
+              <CardDescription>
+                Describe the API endpoint you need (its behavior, data, path, method), and AI will generate the Next.js handler code and an example response.
+              </CardDescription>
+            </CardHeader>
+            <GenerateEndpointForm />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="generate-schema">
+          <Card>
+            <CardHeader>
+              <CardTitle>Generate JSON Schema from Example JSON</CardTitle>
+              <CardDescription>
+                Provide an example JSON response, and AI will create a JSON schema representing its structure.
+              </CardDescription>
+            </CardHeader>
+            <GenerateSchemaForm />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="generate-json">
+          <Card>
+            <CardHeader>
+              <CardTitle>Generate Example JSON from JSON Schema</CardTitle>
+              <CardDescription>
+                Input a JSON schema, and AI will generate a valid example JSON object matching that schema.
+              </CardDescription>
+            </CardHeader>
+            <GenerateJsonForm />
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

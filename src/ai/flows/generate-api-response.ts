@@ -1,63 +1,82 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GenerateEndpointForm } from "./components/GenerateEndpointForm"; // Renamed
+import { GenerateSchemaForm } from "./components/GenerateSchemaForm";
+import { GenerateJsonForm } from "./components/GenerateJsonForm";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Bot, PencilRuler, FileJson, FileInput } from "lucide-react"; // Added more icons
+import { ApiKeyManager } from "./components/ApiKeyManager";
 
-'use server';
+export default function GeneratePage() {
+  return (
+    <div className="space-y-8">
+      <Card className="shadow-md">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <Bot className="h-10 w-10 text-primary" />
+            <div>
+              <CardTitle className="text-3xl font-bold font-headline text-primary">AI-Powered API Tools</CardTitle>
+              <CardDescription className="text-lg mt-1">
+                Generate API endpoint code, JSON schemas, and example JSON using AI.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
-/**
- * @fileOverview An AI agent that generates a sample API response in JSON format based on a user-provided prompt.
- *
- * - generateApiResponse - A function that handles the generation of the API response.
- * - GenerateApiResponseInput - The input type for the generateApiResponse function.
- * - GenerateApiResponseOutput - The return type for the generateApiResponse function.
- */
+      <ApiKeyManager />
 
-import { genkit } from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
-import { ai as globalAi } from '@/ai/genkit'; // Renamed to avoid conflict
-import { z } from 'genkit';
+      <Tabs defaultValue="generate-endpoint" className="w-full">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-6">
+          <TabsTrigger value="generate-endpoint">
+            <PencilRuler className="h-4 w-4 mr-2" />
+            Endpoint from Prompt
+          </TabsTrigger>
+          <TabsTrigger value="generate-schema">
+            <FileJson className="h-4 w-4 mr-2" />
+            Schema from JSON
+          </TabsTrigger>
+          <TabsTrigger value="generate-json">
+            <FileInput className="h-4 w-4 mr-2" />
+            JSON from Schema
+            </TabsTrigger>
+        </TabsList>
 
-const GenerateApiResponseInputSchema = z.object({
-  prompt: z.string().describe('A prompt describing the desired API response data and format.'),
-  userApiKey: z.string().optional().describe('Optional user-provided Google AI API key.')
-});
-export type GenerateApiResponseInput = z.infer<typeof GenerateApiResponseInputSchema>;
+        <TabsContent value="generate-endpoint">
+          <Card>
+            <CardHeader>
+              <CardTitle>Generate API Endpoint from Prompt</CardTitle>
+              <CardDescription>
+                Describe the API endpoint you need (its behavior, data, path, method), and AI will generate the Next.js handler code and an example response.
+              </CardDescription>
+            </CardHeader>
+            <GenerateEndpointForm />
+          </Card>
+        </TabsContent>
 
-const GenerateApiResponseOutputSchema = z.object({
-  apiResponse: z.string().describe('The generated API response in JSON format.'),
-});
-export type GenerateApiResponseOutput = z.infer<typeof GenerateApiResponseOutputSchema>;
+        <TabsContent value="generate-schema">
+          <Card>
+            <CardHeader>
+              <CardTitle>Generate JSON Schema from Example JSON</CardTitle>
+              <CardDescription>
+                Provide an example JSON response, and AI will create a JSON schema representing its structure.
+              </CardDescription>
+            </CardHeader>
+            <GenerateSchemaForm />
+          </Card>
+        </TabsContent>
 
-export async function generateApiResponse(input: GenerateApiResponseInput): Promise<GenerateApiResponseOutput> {
-  return generateApiResponseFlow(input);
+        <TabsContent value="generate-json">
+          <Card>
+            <CardHeader>
+              <CardTitle>Generate Example JSON from JSON Schema</CardTitle>
+              <CardDescription>
+                Input a JSON schema, and AI will generate a valid example JSON object matching that schema.
+              </CardDescription>
+            </CardHeader>
+            <GenerateJsonForm />
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
 }
-
-// This is the original prompt defined with the global 'ai' instance
-const originalPrompt = globalAi.definePrompt({
-  name: 'generateApiResponsePrompt',
-  input: { schema: GenerateApiResponseInputSchema.omit({ userApiKey: true }) }, // Original prompt doesn't know about userApiKey
-  output: { schema: GenerateApiResponseOutputSchema },
-  prompt: `You are an API response generator.  You will generate a sample API response in JSON format based on the user-provided prompt. Ensure that the response is valid JSON.\n\nPrompt: {{{prompt}}}`,
-});
-
-const generateApiResponseFlow = globalAi.defineFlow(
-  {
-    name: 'generateApiResponseFlow',
-    inputSchema: GenerateApiResponseInputSchema,
-    outputSchema: GenerateApiResponseOutputSchema,
-  },
-  async (input) => {
-    if (input.userApiKey) {
-      const customGenkit = genkit({ plugins: [googleAI({ apiKey: input.userApiKey })] });
-      const response = await customGenkit.generate({
-        model: 'googleai/gemini-2.0-flash', // Use same model for consistency
-        prompt: `You are an API response generator.  You will generate a sample API response in JSON format based on the user-provided prompt. Ensure that the response is valid JSON.\n\nPrompt: ${input.prompt}`,
-        output: { schema: GenerateApiResponseOutputSchema },
-        config: originalPrompt.config // Use config from original prompt if any (e.g. safetySettings)
-      });
-      return response.output!;
-    } else {
-      // Use the original prompt object if no userApiKey is provided
-      const { output } = await originalPrompt({ prompt: input.prompt });
-      return output!;
-    }
-  }
-);
-

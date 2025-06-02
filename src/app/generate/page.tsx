@@ -1,10 +1,10 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GenerateResponseForm } from "./components/GenerateResponseForm";
+import { GenerateEndpointForm } from "./components/GenerateEndpointForm"; // Renamed
 import { GenerateSchemaForm } from "./components/GenerateSchemaForm";
 import { GenerateJsonForm } from "./components/GenerateJsonForm";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Bot } from "lucide-react";
+import { Bot, PencilRuler, FileJson, FileInput } from "lucide-react"; // Added more icons
 import { ApiKeyManager } from "./components/ApiKeyManager";
 
 export default function GeneratePage() {
@@ -17,7 +17,7 @@ export default function GeneratePage() {
             <div>
               <CardTitle className="text-3xl font-bold font-headline text-primary">AI-Powered API Tools</CardTitle>
               <CardDescription className="text-lg mt-1">
-                Generate API responses, JSON schemas, and example JSON using AI.
+                Generate API endpoint code, JSON schemas, and example JSON using AI.
               </CardDescription>
             </div>
           </div>
@@ -26,22 +26,31 @@ export default function GeneratePage() {
 
       <ApiKeyManager />
 
-      <Tabs defaultValue="generate-response" className="w-full">
+      <Tabs defaultValue="generate-endpoint" className="w-full">
         <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-6">
-          <TabsTrigger value="generate-response">From Prompt</TabsTrigger>
-          <TabsTrigger value="generate-schema">Schema from JSON</TabsTrigger>
-          <TabsTrigger value="generate-json">JSON from Schema</TabsTrigger>
+          <TabsTrigger value="generate-endpoint">
+            <PencilRuler className="h-4 w-4 mr-2" />
+            Endpoint from Prompt
+          </TabsTrigger>
+          <TabsTrigger value="generate-schema">
+            <FileJson className="h-4 w-4 mr-2" />
+            Schema from JSON
+          </TabsTrigger>
+          <TabsTrigger value="generate-json">
+            <FileInput className="h-4 w-4 mr-2" />
+            JSON from Schema
+            </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="generate-response">
+        <TabsContent value="generate-endpoint">
           <Card>
             <CardHeader>
-              <CardTitle>Generate API Response from Prompt</CardTitle>
+              <CardTitle>Generate API Endpoint from Prompt</CardTitle>
               <CardDescription>
-                Describe the data and format you need, and let AI generate a sample API response for you.
+                Describe the API endpoint you need (its behavior, data, path, method), and AI will generate the Next.js handler code and an example response.
               </CardDescription>
             </CardHeader>
-            <GenerateResponseForm />
+            <GenerateEndpointForm />
           </Card>
         </TabsContent>
 
