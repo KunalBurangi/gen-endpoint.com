@@ -2,7 +2,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { generateRuntimeResponse, type GenerateRuntimeResponseInput } from '@/ai/flows/generate-runtime-response';
 
-export async function GET(request: NextRequest, { params }: { params: { slug: string[] } }) {
+async function handleRuntimeRequest(request: NextRequest, params: { slug: string[] }, httpMethod: string) {
   const userApiKey = request.headers.get('x-goog-api-key');
   const userQuery = request.nextUrl.searchParams.get('user_query');
   const pathSlug = params.slug ? params.slug.join('/') : '';
@@ -19,16 +19,33 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
     return NextResponse.json({ error: "Invalid path. The path for the runtime endpoint cannot be empty." }, { status: 400 });
   }
 
+  let requestBodyString: string | undefined;
+  if (['POST', 'PUT', 'PATCH'].includes(httpMethod.toUpperCase())) {
+    try {
+      // Check if request has a body
+      if (request.body) {
+        const body = await request.json();
+        requestBodyString = JSON.stringify(body);
+      }
+    } catch (e) {
+      // If body parsing fails (e.g. not JSON or empty), proceed without it.
+      // The AI flow is designed to handle an optional requestBody.
+      console.warn(`Could not parse request body for ${httpMethod} /api/runtime/${pathSlug}: ${(e as Error).message}`);
+      requestBodyString = undefined;
+    }
+  }
+
   try {
     const input: GenerateRuntimeResponseInput = {
       pathSlug,
       userQuery,
+      httpMethod,
+      requestBody: requestBodyString,
       userApiKey,
     };
     const result = await generateRuntimeResponse(input);
     
     try {
-      // The flow should ideally ensure this is valid JSON, but double check
       const jsonData = JSON.parse(result.jsonResponse);
       return NextResponse.json(jsonData);
     } catch (parseError) {
@@ -37,7 +54,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
     }
 
   } catch (error) {
-    console.error("Error in /api/runtime/[...slug]:", error);
+    console.error(`Error in /api/runtime/[...slug] (${httpMethod}):`, error);
     let errorMessage = "An unexpected error occurred while generating the AI response.";
     let statusCode = 500;
 
@@ -53,11 +70,31 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
         statusCode = 503;
       } else if (error.message.includes("AI response could not be parsed") || error.message.includes("AI generated data that was not valid JSON")) {
         errorMessage = "The AI returned data that couldn't be processed as valid JSON. Try rephrasing your query.";
-        statusCode = 502; // Bad Gateway, as AI is upstream
+        statusCode = 502; 
       } else {
-        errorMessage = error.message; // Use the specific error message from the flow if available
+        errorMessage = error.message; 
       }
     }
     return NextResponse.json({ error: errorMessage }, { status: statusCode });
   }
+}
+
+export async function GET(request: NextRequest, { params }: { params: { slug: string[] } }) {
+  return handleRuntimeRequest(request, params, 'GET');
+}
+
+export async function POST(request: NextRequest, { params }: { params: { slug: string[] } }) {
+  return handleRuntimeRequest(request, params, 'POST');
+}
+
+export async function PUT(request: NextRequest, { params }: { params: { slug: string[] } }) {
+  return handleRuntimeRequest(request, params, 'PUT');
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: { slug: string[] } }) {
+  return handleRuntimeRequest(request, params, 'PATCH');
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: { slug:string[] } }) {
+  return handleRuntimeRequest(request, params, 'DELETE');
 }

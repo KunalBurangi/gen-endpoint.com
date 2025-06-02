@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react"; // Added useEffect
+import { useState, useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,8 +29,9 @@ export function GenerateEndpointForm() {
   const [generatedOutput, setGeneratedOutput] = useState<GenerateApiEndpointOutput | null>(null);
   const [originalUserPrompt, setOriginalUserPrompt] = useState<string>("");
   const [dynamicCurlCommand, setDynamicCurlCommand] = useState<string>(
-    'curl -X GET "YOUR_APP_ORIGIN/api/runtime/your-path?user_query=your_prompt" -H "X-Goog-Api-Key: YOUR_GOOGLE_AI_KEY" # Details will load once endpoint is generated.'
-  ); // Initial placeholder
+    '# curl command will appear here once endpoint details are generated.'
+  );
+  const [displayedRuntimeUrl, setDisplayedRuntimeUrl] = useState<string>("YOUR_APP_ORIGIN/api/runtime/... (will populate when endpoint is generated)");
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -75,10 +76,8 @@ export function GenerateEndpointForm() {
           description = "API key not valid. Please check your key in the API Key Manager section.";
         } else if (error.message.includes("503") || error.message.toLowerCase().includes("model is overloaded") || error.message.toLowerCase().includes("service unavailable")) {
           description = "The AI model is currently overloaded or unavailable. Please try again in a few moments.";
-        } else if (error.message.includes("AI response could not be parsed") || error.message.includes("AI generated data that was not valid JSON")) {
-          description = "The AI returned data that couldn't be processed as valid JSON. Try rephrasing your query or ensure the AI can generate valid JSON for your prompt.";
-        } else if (error.message.includes("AI response was empty or could not be parsed to the GenerateApiEndpointOutputSchema")) {
-          description = "The AI response could not be understood or was empty. Please check your prompt or try again.";
+        } else if (error.message.includes("AI response could not be parsed") || error.message.includes("AI generated data that was not valid JSON") || error.message.includes("AI response was empty or could not be parsed to the GenerateApiEndpointOutputSchema")) {
+            description = "The AI returned data that couldn't be processed as valid JSON or was empty. Try rephrasing your query or ensure the AI can generate valid JSON for your prompt.";
         }
       }
       toast({ variant: "destructive", title: "Error", description });
@@ -101,26 +100,49 @@ export function GenerateEndpointForm() {
   useEffect(() => {
     if (generatedOutput && generatedOutput.suggestedPath && originalUserPrompt && typeof window !== "undefined") {
       const slug = generatedOutput.suggestedPath.startsWith('/api/')
-        ? generatedOutput.suggestedPath.substring(5)
+        ? generatedOutput.suggestedPath.substring(5) // remove /api/
         : generatedOutput.suggestedPath.startsWith('/')
-        ? generatedOutput.suggestedPath.substring(1)
+        ? generatedOutput.suggestedPath.substring(1) // remove leading /
         : generatedOutput.suggestedPath;
 
       if (slug) {
-        const runtimeUrl = `/api/runtime/${slug}?user_query=${encodeURIComponent(originalUserPrompt)}`;
+        const runtimeUrlBase = `/api/runtime/${slug}?user_query=${encodeURIComponent(originalUserPrompt)}`;
         const userApiKey = getUserApiKey();
         const origin = window.location.origin;
+        const apiKeyHeader = userApiKey ? `-H "X-Goog-Api-Key: ${userApiKey}"` : `-H "X-Goog-Api-Key: YOUR_GOOGLE_AI_KEY"`;
+        const contentTypeHeader = `-H "Content-Type: application/json"`;
         
-        const command = userApiKey
-          ? `curl -X GET "${origin}${runtimeUrl}" -H "X-Goog-Api-Key: ${userApiKey}"`
-          : `curl -X GET "${origin}${runtimeUrl}" -H "X-Goog-Api-Key: YOUR_GOOGLE_AI_KEY"`;
+        let command = "";
+        const method = generatedOutput.httpMethod.toUpperCase();
+        const exampleBody = '{\n  "message": "Sample JSON body. The AI will use this if provided."\n}';
+
+        switch (method) {
+          case 'GET':
+            command = `curl -X GET "${origin}${runtimeUrlBase}" ${apiKeyHeader}`;
+            break;
+          case 'POST':
+            command = `curl -X POST "${origin}${runtimeUrlBase}" ${apiKeyHeader} ${contentTypeHeader} -d '${exampleBody}'`;
+            break;
+          case 'PUT':
+            command = `curl -X PUT "${origin}${runtimeUrlBase}" ${apiKeyHeader} ${contentTypeHeader} -d '${exampleBody}'`;
+            break;
+          case 'PATCH':
+            command = `curl -X PATCH "${origin}${runtimeUrlBase}" ${apiKeyHeader} ${contentTypeHeader} -d '${exampleBody}'`;
+            break;
+          case 'DELETE':
+            command = `curl -X DELETE "${origin}${runtimeUrlBase}" ${apiKeyHeader}`;
+            break;
+          default:
+            command = `# AI generated an HTTP method (${method}) not currently supported by the live runtime tester.`;
+        }
         setDynamicCurlCommand(command);
+        setDisplayedRuntimeUrl(`${origin}${runtimeUrlBase}`);
       }
     } else if (!generatedOutput) {
-        // Reset or set to a default placeholder if no output
         setDynamicCurlCommand(
-            'curl -X GET "YOUR_APP_ORIGIN/api/runtime/your-path?user_query=your_prompt" -H "X-Goog-Api-Key: YOUR_GOOGLE_AI_KEY" # Details will load once endpoint is generated.'
+            '# curl command will appear here once endpoint details are generated.'
         );
+        setDisplayedRuntimeUrl('YOUR_APP_ORIGIN/api/runtime/... (will populate when endpoint is generated)');
     }
   }, [generatedOutput, originalUserPrompt]);
 
@@ -155,12 +177,12 @@ export function GenerateEndpointForm() {
                     Generated Endpoint Details
                 </h3>
                  <div className="space-y-1 mb-3">
-                    <div className="text-sm"><strong className="font-medium">HTTP Method:</strong>
+                    <div className="text-sm font-medium">HTTP Method:
                         <Badge variant={
-                            generatedOutput.httpMethod === 'GET' ? 'default' :
-                            generatedOutput.httpMethod === 'POST' ? 'secondary' :
-                            generatedOutput.httpMethod === 'PUT' ? 'outline' :
-                            generatedOutput.httpMethod === 'DELETE' ? 'destructive' : 'default'
+                            generatedOutput.httpMethod.toUpperCase() === 'GET' ? 'default' :
+                            generatedOutput.httpMethod.toUpperCase() === 'POST' ? 'secondary' :
+                            generatedOutput.httpMethod.toUpperCase() === 'PUT' ? 'outline' :
+                            generatedOutput.httpMethod.toUpperCase() === 'DELETE' ? 'destructive' : 'default'
                         }
                         className={`ml-2 ${
                             generatedOutput.httpMethod.toUpperCase() === 'GET' ? 'bg-blue-600 hover:bg-blue-700 text-white' :
@@ -170,10 +192,10 @@ export function GenerateEndpointForm() {
                             'bg-gray-500 hover:bg-gray-600 text-white'
                           }`}
                         >
-                            {generatedOutput.httpMethod}
+                            {generatedOutput.httpMethod.toUpperCase()}
                         </Badge>
                     </div>
-                    <div className="text-sm"><strong className="font-medium">Suggested Path:</strong> <code className="text-sm bg-muted p-1 rounded-md ml-1">{generatedOutput.suggestedPath}</code></div>
+                    <div className="text-sm font-medium">Suggested Path: <code className="text-sm bg-muted p-1 rounded-md ml-1">{generatedOutput.suggestedPath}</code></div>
                 </div>
               </div>
 
@@ -213,7 +235,7 @@ export function GenerateEndpointForm() {
                 </Card>
               )}
 
-              {generatedOutput.suggestedPath && ( // Only show if path is available
+              {generatedOutput.suggestedPath && (
                 <Card className="mt-6 border-accent/50 bg-accent/5">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center text-accent">
@@ -221,28 +243,28 @@ export function GenerateEndpointForm() {
                       Experimental: Live AI Runtime Endpoint
                     </CardTitle>
                     <CardDescription className="text-xs">
-                      You can test fetching dynamic, AI-generated data based on your original prompt using a special runtime endpoint. This endpoint doesn't use the handler code above but generates data live using AI.
+                      Test fetching dynamic, AI-generated data based on your original prompt using a special runtime endpoint. This endpoint doesn&apos;t use the handler code above but generates data live using AI, considering the HTTP method.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    <p className="text-sm font-medium">Runtime Endpoint URL (GET):</p>
+                    <p className="text-sm font-medium">Runtime Endpoint URL ({generatedOutput.httpMethod.toUpperCase()}):</p>
                     <code className="text-sm bg-muted p-1 rounded-md block break-all">
-                       {typeof window !== "undefined" && generatedOutput.suggestedPath ? 
-                          `${window.location.origin}/api/runtime/${generatedOutput.suggestedPath.startsWith('/api/') ? generatedOutput.suggestedPath.substring(5) : generatedOutput.suggestedPath.startsWith('/') ? generatedOutput.suggestedPath.substring(1) : generatedOutput.suggestedPath}?user_query=${encodeURIComponent(originalUserPrompt)}`
-                          : `YOUR_APP_ORIGIN/api/runtime/... (will populate when endpoint is generated)`
-                       }
+                       {displayedRuntimeUrl}
                     </code>
                     <p className="text-sm mt-2 font-medium">Instructions for Postman/curl:</p>
                     <ol className="list-decimal list-inside text-xs space-y-1 text-muted-foreground">
-                      <li>Make a GET request to the URL above.</li>
+                      <li>Make a {generatedOutput.httpMethod.toUpperCase()} request to the URL above.</li>
                       <li>You <strong>MUST</strong> include your Google AI API Key as a request header: <code className="text-xs bg-muted px-1 py-0.5 rounded">X-Goog-Api-Key: YOUR_API_KEY</code>.</li>
+                      {['POST', 'PUT', 'PATCH'].includes(generatedOutput.httpMethod.toUpperCase()) && (
+                        <li>For {generatedOutput.httpMethod.toUpperCase()}, include a JSON body with your request. The AI will consider this body. The example `curl` command provides a sample.</li>
+                      )}
                       <li>The <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code> parameter in the URL should be your original prompt (it's already URL-encoded in the example URL).</li>
                     </ol>
                     <p className="text-sm mt-2 font-medium">Example <code className="text-xs bg-muted px-1 py-0.5 rounded">curl</code> command:</p>
                     <CodeBlock code={dynamicCurlCommand} language="bash" />
                      <p className="text-xs text-muted-foreground mt-1">
-                      Note: Replace <code className="text-xs bg-muted px-1 py-0.5 rounded">YOUR_API_KEY</code> with your actual key if you haven't saved it in the API Key Manager, or if it's not detected.
-                      The live runtime endpoint's response depends on the AI's interpretation of your <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code> and may differ from the "Example JSON Response" shown for the generated code.
+                      Note: Replace <code className="text-xs bg-muted px-1 py-0.5 rounded">YOUR_API_KEY</code> with your actual key if you haven&apos;t saved it in the API Key Manager, or if it&apos;s not detected.
+                      The live runtime endpoint&apos;s response depends on the AI&apos;s interpretation of your <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code>, the HTTP method, and any request body provided.
                     </p>
                   </CardContent>
                 </Card>
@@ -262,4 +284,3 @@ export function GenerateEndpointForm() {
     </Form>
   );
 }
-
