@@ -62,7 +62,7 @@ export const publicApis: ApiDefinition[] = [
         method: 'GET',
         path: '/api/status',
         description: 'Returns the current system status, service name, uptime (illustrative), and a timestamp.',
-        exampleResponse: '{\n  "status": "operational",\n  "serviceName": "API Endpoint Explorer Backend",\n  "version": "1.2.3", \n  "uptimeSeconds": 18345,\n  "lastChecked": "2024-08-15T11:00:00.000Z"\n}'
+        exampleResponse: '{\n  "status": "operational",\n  "serviceName": "API Endpoint Explorer Backend",\n  "version": "1.2.3",\n  "uptimeSeconds": 18345,\n  "lastChecked": "2024-08-15T11:00:00.000Z"\n}'
       },
     ],
   },
@@ -79,14 +79,14 @@ export const publicApis: ApiDefinition[] = [
         path: '/api/echo?text=Hello%20World&count=5&active=true',
         description: 'Echoes the query parameters provided in the request URL.',
         exampleRequest: '?text=Hello%20World&count=5&active=true',
-        exampleResponse: '{\n  "type": "GET",\n  "queryParams": {\n    "text": "Hello World",\n    "count": "5",\n    "active": "true"\n  },\n  "message": "Query parameters echoed successfully.",\n  "headers": { /* ... request headers ... */ },\n  "timestamp": "2024-08-15T12:00:00.000Z"\n}'
+        exampleResponse: '{\n  "type": "GET",\n  "queryParams": {\n    "text": "Hello World",\n    "count": "5",\n    "active": "true"\n  },\n  "message": "Query parameters echoed successfully.",\n  "headers": { "example-header": "example-value" },\n  "timestamp": "2024-08-15T12:00:00.000Z"\n}'
       },
       {
         method: 'POST',
         path: '/api/echo',
         description: 'Echoes the JSON or Text body sent in the request. Try sending non-JSON text too!',
         exampleRequest: '{\n  "user": {\n    "id": "user-789",\n    "role": "admin"\n  },\n  "operation": "echo_test"\n}',
-        exampleResponse: '{\n  "type": "POST",\n  "receivedBody": {\n    "user": {\n      "id": "user-789",\n      "role": "admin"\n    },\n    "operation": "echo_test"\n  },\n  "message": "JSON body echoed successfully.",\n  "headers": { /* ... request headers ... */ },\n  "timestamp": "2024-08-15T12:05:00.000Z"\n}'
+        exampleResponse: '{\n  "type": "POST",\n  "receivedBody": {\n    "user": {\n      "id": "user-789",\n      "role": "admin"\n    },\n    "operation": "echo_test"\n  },\n  "message": "JSON body echoed successfully.",\n  "headers": { "example-header": "example-value" },\n  "timestamp": "2024-08-15T12:05:00.000Z"\n}'
       }
     ]
   },
@@ -204,3 +204,4 @@ export const apiCategories: string[] = Array.from(new Set(publicApis.map(api => 
 export const getApiById = (id: string): ApiDefinition | undefined => {
   return publicApis.find(api => api.id === id);
 };
+
