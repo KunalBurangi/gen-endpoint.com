@@ -73,7 +73,15 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
       }
     } catch (err) {
       console.error("API call error:", err);
-      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+      let errorMessage = 'An unknown error occurred.';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+        // Check if the error is due to non-JSON response
+        if (err.message.toLowerCase().includes('invalid json') || err.message.toLowerCase().includes('unexpected token')) {
+            errorMessage = `Failed to parse response as JSON. The server might have returned HTML (e.g., a 404 page) or non-JSON data. Original error: ${err.message}`;
+        }
+      }
+      setError(errorMessage);
       setStatusCode(null); // Or a generic error code like 500
     } finally {
       setIsLoading(false);
@@ -101,19 +109,19 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
 
   return (
     <div className="space-y-4">
-      {endpoint.method === 'GET' && endpoint.path.includes('?') && (
+      {endpoint.method === 'GET' && (
         <div className="space-y-1">
-          <Label htmlFor={`requestPath-${endpoint.path}`}>Request Path (with query params)</Label>
+          <Label htmlFor={`requestPath-${endpoint.path}`}>Request Path</Label>
           <Input
             id={`requestPath-${endpoint.path}`}
             value={requestPath}
             onChange={(e) => setRequestPath(e.target.value)}
-            placeholder="e.g., /greeting?name=User"
+            placeholder="e.g., /greeting or /greeting?name=User"
             className="font-mono text-sm"
             disabled={isLoading}
           />
            <p className="text-xs text-muted-foreground">
-            For GET requests with parameters, modify the path above.
+            For GET requests, modify the path above to add or change query parameters.
           </p>
         </div>
       )}
@@ -152,7 +160,7 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
                 {statusCode && <Badge variant="destructive" className="text-xs">{statusCode}</Badge>}
             </CardHeader>
             <CardContent>
-                 <CodeBlock code={error} language="json" className="text-xs border-destructive/30" />
+                 <CodeBlock code={error} language="text" className="text-xs border-destructive/30" />
             </CardContent>
         </Card>
       )}
@@ -179,3 +187,4 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
     </div>
   );
 }
+
