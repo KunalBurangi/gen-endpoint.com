@@ -55,8 +55,15 @@ const generateJsonFromSchemaFlow = globalAi.defineFlow(
   Generate a JSON example based on the following JSON schema:\n\n  ${input.jsonSchema}\n\n  The JSON should be valid and well-formatted.
   Ensure that the generated JSON adheres to the schema, including data types and required fields.`,
       output: { schema: GenerateJsonFromSchemaOutputSchema },
-      config: originalPrompt.config
     });
-    return response.output!;
+    
+    const output = response.output;
+    if (!output) {
+      console.error("AI response was empty or could not be parsed to the GenerateJsonFromSchemaOutputSchema. Raw response text:", response.text);
+      const errorText = response.text ?? "No error text available from AI response.";
+      throw new Error(`AI response could not be parsed to the expected format. AI message: ${errorText}`);
+    }
+    return output;
   }
 );
+

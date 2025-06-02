@@ -42,7 +42,7 @@ export function GenerateEndpointForm() {
     if (!userApiKey) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: "API Key Required",
         description: "A Google AI API key is required. Please provide one in the API Key Manager section above.",
       });
       return;
@@ -53,7 +53,7 @@ export function GenerateEndpointForm() {
 
     const inputData: GenerateApiEndpointInput = {
       prompt: data.prompt,
-      userApiKey: userApiKey, // userApiKey is now guaranteed to be present
+      userApiKey: userApiKey,
     };
 
     try {
@@ -70,7 +70,9 @@ export function GenerateEndpointForm() {
           description = "API key not valid. Please check your key in the API Key Manager section.";
         } else if (error.message.includes("503") || error.message.toLowerCase().includes("model is overloaded") || error.message.toLowerCase().includes("service unavailable")) {
           description = "The AI model is currently overloaded or unavailable. Please try again in a few moments.";
-        } else if (error.message.includes("json")) {
+        } else if (error.message.includes("AI response could not be parsed")) {
+          description = "The AI returned a response that couldn't be understood. Please try rephrasing your prompt or try again later.";
+        } else if (error.message.includes("json")) { // Kept as a fallback for other JSON issues
             description = "The AI returned an invalid format. Please try again or rephrase your prompt.";
         }
       }
@@ -193,3 +195,4 @@ export function GenerateEndpointForm() {
     </Form>
   );
 }
+

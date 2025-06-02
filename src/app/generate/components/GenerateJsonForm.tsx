@@ -49,7 +49,7 @@ export function GenerateJsonForm() {
     if (!userApiKey) {
       toast({
         variant: "destructive",
-        title: "Error",
+        title: "API Key Required",
         description: "A Google AI API key is required. Please provide one in the API Key Manager section above.",
       });
       return;
@@ -60,7 +60,7 @@ export function GenerateJsonForm() {
 
     const inputData: GenerateJsonFromSchemaInput = {
       jsonSchema: data.jsonSchema,
-      userApiKey: userApiKey, // userApiKey is now guaranteed to be present
+      userApiKey: userApiKey,
     };
 
     try {
@@ -77,6 +77,8 @@ export function GenerateJsonForm() {
           description = "API key not valid. Please check your key in the API Key Manager section.";
         } else if (error.message.includes("503") || error.message.toLowerCase().includes("model is overloaded") || error.message.toLowerCase().includes("service unavailable")) {
           description = "The AI model is currently overloaded or unavailable. Please try again in a few moments.";
+        } else if (error.message.includes("AI response could not be parsed")) {
+          description = "The AI returned a response that couldn't be understood. Please try rephrasing your input or try again later.";
         }
       }
       toast({ variant: "destructive", title: "Error", description });
@@ -124,3 +126,4 @@ export function GenerateJsonForm() {
     </Form>
   );
 }
+

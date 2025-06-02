@@ -64,8 +64,15 @@ const generateJsonSchemaFlow = globalAi.defineFlow(
   JSON Schema:
   `,
       output: { schema: GenerateJsonSchemaOutputSchema },
-      config: originalPrompt.config
     });
-    return response.output!;
+
+    const output = response.output;
+    if (!output) {
+      console.error("AI response was empty or could not be parsed to the GenerateJsonSchemaOutputSchema. Raw response text:", response.text);
+      const errorText = response.text ?? "No error text available from AI response.";
+      throw new Error(`AI response could not be parsed to the expected format. AI message: ${errorText}`);
+    }
+    return output;
   }
 );
+

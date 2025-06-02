@@ -51,7 +51,7 @@ Schema for your JSON output:
 }
 `;
 
-// originalPrompt is useful for its config and schema definitions, even if not directly called for generation without a user key.
+// originalPrompt is useful for its schema definitions for Genkit tooling, even if not directly called for generation without a user key.
 const originalPrompt = globalAi.definePrompt({
   name: 'generateApiEndpointPrompt',
   input: { schema: GenerateApiEndpointInputSchema.omit({ userApiKey: true }) },
@@ -77,8 +77,15 @@ const generateApiEndpointFlow = globalAi.defineFlow(
       system: systemPrompt,
       prompt: `User Prompt: ${input.prompt}`,
       output: { schema: GenerateApiEndpointOutputSchema },
-      config: originalPrompt.config,
     });
-    return response.output!;
+    
+    const output = response.output;
+    if (!output) {
+      console.error("AI response was empty or could not be parsed to the GenerateApiEndpointOutputSchema. Raw response text:", response.text);
+      const errorText = response.text ?? "No error text available from AI response.";
+      throw new Error(`AI response could not be parsed to the expected format. AI message: ${errorText}`);
+    }
+    return output;
   }
 );
+
