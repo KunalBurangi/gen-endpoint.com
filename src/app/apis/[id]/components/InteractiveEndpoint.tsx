@@ -29,7 +29,6 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [statusCode, setStatusCode] = useState<number | null>(null);
 
-  // Update requestPath if endpoint.path changes (e.g. on navigation)
   useEffect(() => {
     setRequestPath(endpoint.path);
     if ((endpoint.method === 'POST' || endpoint.method === 'PUT') && endpoint.exampleRequest) {
@@ -59,7 +58,6 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
       options.body = requestBody;
     }
     
-    // Prepend /api if not already present, to ensure it hits our Next.js API routes
     const fetchPath = requestPath.startsWith('/api/') ? requestPath : `/api${requestPath.startsWith('/') ? '' : '/'}${requestPath}`;
 
     try {
@@ -76,19 +74,19 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
       let errorMessage = 'An unknown error occurred.';
       if (err instanceof Error) {
         errorMessage = err.message;
-        // Check if the error is due to non-JSON response
         if (err.message.toLowerCase().includes('invalid json') || err.message.toLowerCase().includes('unexpected token')) {
-            errorMessage = `Failed to parse response as JSON. The server might have returned HTML (e.g., a 404 page) or non-JSON data. Original error: ${err.message}`;
+            errorMessage = `Failed to parse response as JSON. The server might have returned an HTML page (e.g., a 404 not found) or non-JSON data. Original error: ${err.message}`;
         }
       }
       setError(errorMessage);
-      setStatusCode(null); // Or a generic error code like 500
+      setStatusCode(null); 
     } finally {
       setIsLoading(false);
     }
   };
 
   const isJsonString = (str: string) => {
+    if (!str || typeof str !== 'string') return false;
     try {
       JSON.parse(str);
     } catch (e) {
@@ -102,27 +100,43 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
       try {
         exampleRequestBodyFormatted = JSON.stringify(JSON.parse(requestBody), null, 2);
       } catch (e) {
-        // keep original if not parsable, though it should be
+        // keep original if not parsable
       }
+  }
+
+  const hasPathPlaceholders = endpoint.path.includes('{') && endpoint.path.includes('}');
+  const isGetRequest = endpoint.method === 'GET';
+  const showPathInput = isGetRequest || hasPathPlaceholders;
+
+  let pathInputDescription = '';
+  if (hasPathPlaceholders) {
+    pathInputDescription += 'Replace placeholders (e.g., {userId}) with actual values in the path above. ';
+  }
+  if (isGetRequest && hasPathPlaceholders) {
+    pathInputDescription += 'You can also add/edit query parameters (e.g., ?key=value).';
+  } else if (isGetRequest) {
+    pathInputDescription += 'You can add or change query parameters in the path above (e.g., ?name=User).';
   }
 
 
   return (
     <div className="space-y-4">
-      {endpoint.method === 'GET' && (
+      {showPathInput && (
         <div className="space-y-1">
           <Label htmlFor={`requestPath-${endpoint.path}`}>Request Path</Label>
           <Input
             id={`requestPath-${endpoint.path}`}
             value={requestPath}
             onChange={(e) => setRequestPath(e.target.value)}
-            placeholder="e.g., /greeting or /greeting?name=User"
+            placeholder={endpoint.path} // Show the path with placeholders
             className="font-mono text-sm"
             disabled={isLoading}
           />
-           <p className="text-xs text-muted-foreground">
-            For GET requests, modify the path above to add or change query parameters.
-          </p>
+           {pathInputDescription && (
+            <p className="text-xs text-muted-foreground">
+              {pathInputDescription.trim()}
+            </p>
+          )}
         </div>
       )}
 
@@ -187,4 +201,3 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
     </div>
   );
 }
-
