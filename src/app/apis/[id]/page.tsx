@@ -8,18 +8,21 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ArrowLeft, ExternalLink, Terminal, Info, Layers, FileInput, FileOutput, Server, PlayCircle } from 'lucide-react';
-import { InteractiveEndpoint } from './components/InteractiveEndpoint'; // New component
+import { InteractiveEndpoint } from './components/InteractiveEndpoint';
+import { use } from 'react'; // Import React.use
 
 interface ApiDetailPageProps {
-  params: { id: string };
+  // According to the Next.js warning, params is (or will be) a Promise.
+  // To correctly use React.use, the type should reflect this.
+  params: Promise<{ id: string }>;
 }
 
-// Note: generateStaticParams can still be used with client components if needed,
-// but for dynamic data fetching based on client interaction, client components are necessary.
-// export async function generateStaticParams() { ... } // Kept for reference, ensure it's compatible if used
+export default function ApiDetailPage({ params: paramsPromise }: ApiDetailPageProps) { // Renamed prop to paramsPromise
+  // Unwrap the params promise using React.use
+  // This hook will suspend the component if the promise is not yet resolved.
+  const params = use(paramsPromise);
 
-export default function ApiDetailPage({ params }: ApiDetailPageProps) {
-  const api = publicApis.find(a => a.id === params.id);
+  const api = publicApis.find(a => a.id === params.id); // Use the resolved params
 
   if (!api) {
     notFound();
@@ -100,7 +103,6 @@ export default function ApiDetailPage({ params }: ApiDetailPageProps) {
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">{endpoint.description}</p>
                 
-                {/* Static Examples Section - Consider refactoring if this gets too repetitive with InteractiveEndpoint */}
                 {(endpoint.exampleRequest || endpoint.exampleResponse) && (
                   <details className="group">
                     <summary className="cursor-pointer text-sm font-medium text-accent hover:underline list-none flex items-center">
@@ -135,7 +137,6 @@ export default function ApiDetailPage({ params }: ApiDetailPageProps) {
                   </details>
                 )}
 
-                {/* Interactive Section */}
                 <Card className="bg-background/50 border-dashed border-primary/50">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center">
@@ -157,5 +158,4 @@ export default function ApiDetailPage({ params }: ApiDetailPageProps) {
     </div>
   );
 }
-
     
