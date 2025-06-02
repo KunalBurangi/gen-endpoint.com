@@ -10,6 +10,7 @@ import { Loader2, AlertCircle, ChevronRight } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 
 interface InteractiveEndpointProps {
@@ -19,8 +20,8 @@ interface InteractiveEndpointProps {
 export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
   const [requestPath, setRequestPath] = useState(endpoint.path);
   const [requestBody, setRequestBody] = useState(
-    (endpoint.method === 'POST' || endpoint.method === 'PUT') && endpoint.exampleRequest 
-    ? endpoint.exampleRequest 
+    (endpoint.method === 'POST' || endpoint.method === 'PUT') && endpoint.exampleRequest
+    ? endpoint.exampleRequest
     : ''
   );
   const [response, setResponse] = useState<string | null>(null);
@@ -162,8 +163,8 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
                 <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">
                     Response
                 </CardTitle>
-                {statusCode && 
-                  <Badge 
+                {statusCode &&
+                  <Badge
                     className={`text-xs ${statusCode >= 200 && statusCode < 300 ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} text-white`}
                   >
                     {statusCode}
@@ -178,5 +179,3 @@ export function InteractiveEndpoint({ endpoint }: InteractiveEndpointProps) {
     </div>
   );
 }
-
-    
