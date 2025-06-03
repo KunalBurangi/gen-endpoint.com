@@ -101,7 +101,7 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/users',
-        description: 'Retrieves a list of users. Supports an optional `limit` query parameter (e.g., `?limit=5`) to control the number of users returned. If no limit is provided, all users are returned.',
+        description: 'Retrieves a list of users. Supports an optional `limit` query parameter (e.g., `?limit=5`) to control the number of users returned. If no limit is provided, all users are returned (up to the total of 25 mock users).',
         exampleRequest: 'Path: /api/users?limit=5',
         exampleResponse: JSON.stringify([
           {id: "usr_1", name: "Alice Wonderland", email: "alice@example.com", role: "admin", createdAt: "2024-01-10T10:00:00Z", profile: {"bio": "Curiouser and curiouser!", "avatarUrl": "https://placehold.co/100x100.png"}},
@@ -151,7 +151,7 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/products',
-        description: 'Retrieves a list of products. Supports optional query parameters for filtering (e.g., `?category=electronics&inStock=true`) and `limit` to control the number of products returned (e.g., `?limit=1`).',
+        description: 'Retrieves a list of products. Supports optional query parameters for filtering (e.g., `?category=electronics&inStock=true`) and `limit` to control the number of products returned (e.g., `?limit=1`). If no limit is provided, all products are returned (up to the total of 25 mock products).',
         exampleRequest: 'Path: /api/products?category=Books&limit=1',
         exampleResponse: '[\n  {"id": "prod_123", "name": "The Pragmatic Programmer", "category": "Books", "price": 29.99, "stock": 150, "imageUrl": "https://placehold.co/300x200.png", "description": "From journeyman to master.", "details": {"pages": 352, "author": "David Thomas, Andrew Hunt"}, "reviews": [{"rating": 5, "comment": "A must-read!"}]}\n]'
       },
