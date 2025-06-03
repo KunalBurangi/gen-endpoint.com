@@ -21,7 +21,7 @@ export default function AboutPage() {
         <CardHeader className="text-center">
           <div className="w-32 h-32 rounded-full mx-auto mb-4 overflow-hidden border-4 border-primary shadow-md">
             <Image
-              src="/images/kunal-profile.jpg" // Path relative to the public folder
+              src="/images/kunal.jpeg" 
               alt="Kunal Burangi"
               width={128}
               height={128}
