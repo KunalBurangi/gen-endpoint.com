@@ -54,8 +54,6 @@ type FormData = z.infer<typeof FormSchema>;
 export function GenerateEndpointForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedOutput, setGeneratedOutput] = useState<GenerateApiEndpointOutput | null>(null);
-  // This constructedAiPromptForEndpointGen is the DETAILED prompt for the AI that *generates the endpoint code*.
-  const [constructedAiPromptForEndpointGen, setConstructedAiPromptForEndpointGen] = useState<string>(""); 
   const [dynamicCurlCommand, setDynamicCurlCommand] = useState<string>(
     '# curl command will appear here once endpoint details are generated.'
   );
@@ -92,7 +90,7 @@ export function GenerateEndpointForm() {
     let detailedPromptForCodeGeneration = `The user wants to create a ${data.httpMethod} API endpoint.`;
     detailedPromptForCodeGeneration += `\nMain goal or description: "${data.prompt}"`;
 
-    if (data.limit) {
+    if (data.httpMethod === 'GET' && data.limit) {
       detailedPromptForCodeGeneration += `\nIt should ideally support a 'limit' query parameter. For example, a limit of ${data.limit}.`;
     }
 
@@ -110,8 +108,6 @@ export function GenerateEndpointForm() {
 
 Ensure your entire output is a single JSON object matching the required output schema. Do NOT include any markdown formatting like \`\`\`json ... \`\`\` around the JSON object.`;
     
-    setConstructedAiPromptForEndpointGen(detailedPromptForCodeGeneration);
-
     const inputData: GenerateApiEndpointInput = {
       prompt: detailedPromptForCodeGeneration,
       userApiKey: userApiKey,
@@ -195,15 +191,14 @@ Ensure your entire output is a single JSON object matching the required output s
         let runtimeUrl = `${origin}/api/runtime/${slug}`;
         let command = "";
         
-        const formData = form.getValues(); // This is the user's input from the form.
+        const formData = form.getValues();
 
         if (['POST', 'PUT', 'PATCH'].includes(method)) {
-          let bodyPayloadForRuntime: any = { user_query: formData.prompt }; // User's original, short prompt
+          let bodyPayloadForRuntime: any = { user_query: formData.prompt }; 
           
           if (formData.requestBodyExample && formData.requestBodyExample.trim() !== "") {
             try {
               const userExampleParsed = JSON.parse(formData.requestBodyExample.trim());
-              // Merge user's example request body, ensuring user_query isn't overwritten if user accidentally provides it
               bodyPayloadForRuntime = { ...userExampleParsed, ...bodyPayloadForRuntime }; 
             } catch (e) {
               console.warn("Could not parse user's requestBodyExample for runtime curl command's data payload.");
@@ -212,9 +207,8 @@ Ensure your entire output is a single JSON object matching the required output s
           const curlData = `-d '${JSON.stringify(bodyPayloadForRuntime, null, 2)}'`;
           command = `curl -X ${method} "${runtimeUrl}" ${apiKeyHeader} ${contentTypeHeader} ${curlData}`;
         } else { // GET, DELETE
-          // For GET/DELETE, the 'prompt' query param is the user's original simpler prompt.
           runtimeUrl += `?prompt=${encodeURIComponent(formData.prompt)}`;
-          if (formData.limit) {
+          if (method === 'GET' && formData.limit) {
             runtimeUrl += `&limit=${formData.limit}`;
           }
           command = `curl -X ${method} "${runtimeUrl}" ${apiKeyHeader}`;
@@ -226,8 +220,7 @@ Ensure your entire output is a single JSON object matching the required output s
         setDynamicCurlCommand('# curl command will appear here once endpoint details are generated.');
         setDisplayedRuntimeUrl('YOUR_APP_ORIGIN/api/runtime/... (will populate when endpoint is generated)');
     }
-  // formData.prompt, formData.limit, constructedAiPromptForEndpointGen are used in effect
-  }, [generatedOutput, form]); // Removed constructedAiPromptForEndpointGen from deps as it's not used for runtime curl
+  }, [generatedOutput, form]);
 
   return (
     <Form {...form}>
@@ -256,19 +249,21 @@ Ensure your entire output is a single JSON object matching the required output s
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="limit"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Optional: Desired Limit (for lists)</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="e.g., 10" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} value={field.value ?? ''} disabled={isLoading} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {watchedHttpMethod === 'GET' && (
+              <FormField
+                control={form.control}
+                name="limit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Optional: Desired Limit (for lists)</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g., 10" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))} value={field.value ?? ''} disabled={isLoading} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
 
           <FormField
@@ -396,7 +391,7 @@ Ensure your entire output is a single JSON object matching the required output s
                     </CardTitle>
                     <CardDescription className="text-xs">
                       Test fetching dynamic, AI-generated data using this runtime endpoint. 
-                      It uses the concise prompt you provided in the "Describe..." field.
+                      It uses the concise prompt you provided in the "Describe..." field for GET, or a combination for POST/PUT/PATCH.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
@@ -411,7 +406,7 @@ Ensure your entire output is a single JSON object matching the required output s
                       {['POST', 'PUT', 'PATCH'].includes(generatedOutput.httpMethod.toUpperCase()) ? (
                         <li>For {generatedOutput.httpMethod.toUpperCase()} requests, include a JSON body. This body <strong>MUST</strong> contain a <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code> field with your original, concise prompt (from the "Describe..." form field). If you provided an "Example Request Body" in the form, its content will also be included in the example `curl` command's body, merged with this `user_query`.</li>
                       ) : (
-                        <li>The <code className="text-xs bg-muted px-1 py-0.5 rounded">prompt</code> query parameter in the URL should be the original text from the "Describe the API endpoint's purpose" field. The optional <code className="text-xs bg-muted px-1 py-0.5 rounded">limit</code> parameter will also be included if you provided it.</li>
+                        <li>The <code className="text-xs bg-muted px-1 py-0.5 rounded">prompt</code> query parameter in the URL should be the original text from the "Describe the API endpoint's purpose" field. The optional <code className="text-xs bg-muted px-1 py-0.5 rounded">limit</code> parameter will also be included if you provided it (for GET requests).</li>
                       )}
                     </ol>
                     <p className="text-sm mt-2 font-medium">Example <code className="text-xs bg-muted px-1 py-0.5 rounded">curl</code> command:</p>
@@ -419,7 +414,7 @@ Ensure your entire output is a single JSON object matching the required output s
                      <p className="text-xs text-muted-foreground mt-1">
                       Note: Replace <code className="text-xs bg-muted px-1 py-0.5 rounded">YOUR_API_KEY</code> with your actual key.
                       For POST/PUT/PATCH, the JSON body needs the `user_query` field (containing your short, original prompt) and any other example data fields.
-                      For GET/DELETE, the `prompt` and optional `limit` are passed as URL query parameters.
+                      For GET/DELETE, the `prompt` and optional `limit` (for GET) are passed as URL query parameters.
                     </p>
                   </CardContent>
                 </Card>
@@ -439,3 +434,6 @@ Ensure your entire output is a single JSON object matching the required output s
     </Form>
   );
 }
+
+
+    
