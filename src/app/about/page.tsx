@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Image from 'next/image';
-import { Github, Linkedin, Twitter, ExternalLink, Mail } from 'lucide-react'; // Added Mail icon
+import { Github, Linkedin, Mail, ExternalLink } from 'lucide-react'; // Kept ExternalLink in case it's used for other purposes, but won't link a personal site if not provided
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -70,21 +70,16 @@ export default function AboutPage() {
           </p>
           
           <div className="mt-8 flex justify-center gap-4">
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="GitHub">
+            <a href="https://github.com/KunalBurangi" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="GitHub">
               <Github className="h-7 w-7" />
             </a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="LinkedIn">
+            <a href="https://www.linkedin.com/in/kunalburangi/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="LinkedIn">
               <Linkedin className="h-7 w-7" />
-            </a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Twitter">
-              <Twitter className="h-7 w-7" />
             </a>
              <a href="mailto:kunal.burangi96@gmail.com" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Email">
               <Mail className="h-7 w-7" />
             </a>
-            <a href="https://example.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Personal Website">
-              <ExternalLink className="h-7 w-7" />
-            </a>
+            {/* Removed Twitter and Personal Website placeholder links */}
           </div>
            <p className="mt-8 text-center">
             Thanks for visiting — let’s build something cool! 🚀
