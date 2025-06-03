@@ -31,6 +31,9 @@ export default function ApiDetailPage({ params: paramsPromise }: ApiDetailPagePr
   const { Icon } = api;
   const isExternalDoc = api.documentationUrl.startsWith('http://') || api.documentationUrl.startsWith('https://');
 
+  const exampleEndpointPath = api.endpoints.length > 0 ? api.endpoints[0].path : '/api/example-endpoint';
+  const exampleFullUrl = `https://gen-endpoint.com${exampleEndpointPath}`;
+
   return (
     <div className="space-y-8">
       <Button variant="outline" asChild className="mb-6">
@@ -77,7 +80,7 @@ export default function ApiDetailPage({ params: paramsPromise }: ApiDetailPagePr
           </CardTitle>
            <CardDescription>
             Explore and interact with the available endpoints for the {api.name}. These API routes are live!
-            The paths shown below are relative to your application's base URL. For example, if your application is hosted at <code>https://your-app-domain.com</code>, then an endpoint path like <code>/api/greeting</code> would be accessible at <code>https://your-app-domain.com/api/greeting</code>.
+            The paths shown below are relative to your application's base URL. For example, if this application is hosted at <code>https://gen-endpoint.com</code>, an endpoint path for this API, such as <code>{exampleEndpointPath}</code>, would be accessible at <code>{exampleFullUrl}</code>.
             You can use the &quot;Try it out&quot; section for each endpoint or use tools like <code>curl</code>, Postman, or your browser&apos;s address bar (for GET requests) to interact with them.
           </CardDescription>
         </CardHeader>
