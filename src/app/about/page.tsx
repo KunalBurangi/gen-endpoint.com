@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Image from 'next/image';
-import { Github, Linkedin, Mail, ExternalLink } from 'lucide-react'; // Kept ExternalLink in case it's used for other purposes, but won't link a personal site if not provided
+import { Github, Linkedin, Mail, ExternalLink } from 'lucide-react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -21,7 +21,7 @@ export default function AboutPage() {
         <CardHeader className="text-center">
           <div className="w-32 h-32 rounded-full mx-auto mb-4 overflow-hidden border-4 border-primary shadow-md">
             <Image
-              src="https://placehold.co/200x200.png"
+              src="https://storage.googleapis.com/project-idx-hackathon-team-idx-file-upload-prod/images/app-Pz6W9m_uO2R2wN16e7Mv/Kunal.jpg"
               alt="Kunal Burangi"
               width={200}
               height={200}
@@ -79,7 +79,6 @@ export default function AboutPage() {
              <a href="mailto:kunal.burangi96@gmail.com" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Email">
               <Mail className="h-7 w-7" />
             </a>
-            {/* Removed Twitter and Personal Website placeholder links */}
           </div>
            <p className="mt-8 text-center">
             Thanks for visiting — let’s build something cool! 🚀
