@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { Network, Home, Settings2, Info } from 'lucide-react'; // Added Info icon
+import { Network, Home, Settings2 } from 'lucide-react'; // Removed Info icon
 import { Button } from '@/components/ui/button';
 
 export function Header() {
@@ -24,12 +24,7 @@ export function Header() {
               <span className="hidden md:inline">AI API Tools</span>
             </Link>
           </Button>
-          <Button variant="ghost" asChild>
-            <Link href="/about">
-              <Info className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">About</span>
-            </Link>
-          </Button>
+          {/* Removed About link from here */}
         </nav>
       </div>
     </header>
