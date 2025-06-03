@@ -4,43 +4,58 @@ import { generateRuntimeResponse, type GenerateRuntimeResponseInput } from '@/ai
 
 async function handleRuntimeRequest(request: NextRequest, params: { slug: string[] }, httpMethod: string) {
   const userApiKey = request.headers.get('x-goog-api-key');
-  const userQuery = request.nextUrl.searchParams.get('user_query');
+  let userQueryFromQuery = request.nextUrl.searchParams.get('user_query');
+  let userQueryFromBody: string | undefined;
+  let finalRequestBodyString: string | undefined;
   const pathSlug = params.slug ? params.slug.join('/') : '';
 
   if (!userApiKey) {
     return NextResponse.json({ error: "Missing Google AI API Key. Please include it in the 'X-Goog-Api-Key' header." }, { status: 401 });
   }
 
-  if (!userQuery) {
-    return NextResponse.json({ error: "Missing 'user_query' parameter. Please provide a query to generate data." }, { status: 400 });
-  }
-
   if (!pathSlug) {
     return NextResponse.json({ error: "Invalid path. The path for the runtime endpoint cannot be empty." }, { status: 400 });
   }
 
-  let requestBodyString: string | undefined;
+  let bodyForAi: any = undefined;
+
   if (['POST', 'PUT', 'PATCH'].includes(httpMethod.toUpperCase())) {
     try {
-      // Check if request has a body
       if (request.body) {
-        const body = await request.json();
-        requestBodyString = JSON.stringify(body);
+        const rawBody = await request.json();
+        if (typeof rawBody === 'object' && rawBody !== null) {
+          if (rawBody.user_query && typeof rawBody.user_query === 'string') {
+            userQueryFromBody = rawBody.user_query;
+          }
+          // Prepare bodyForAi by removing user_query if it was present
+          const { user_query, ...restOfBody } = rawBody;
+          bodyForAi = Object.keys(restOfBody).length > 0 ? restOfBody : undefined;
+        } else {
+          // If rawBody is not an object (e.g. array or primitive), pass it as is
+           bodyForAi = rawBody;
+        }
+        if (bodyForAi !== undefined) {
+            finalRequestBodyString = JSON.stringify(bodyForAi);
+        }
       }
     } catch (e) {
-      // If body parsing fails (e.g. not JSON or empty), proceed without it.
-      // The AI flow is designed to handle an optional requestBody.
       console.warn(`Could not parse request body for ${httpMethod} /api/runtime/${pathSlug}: ${(e as Error).message}`);
-      requestBodyString = undefined;
+      finalRequestBodyString = undefined; // Explicitly undefined if parsing fails
     }
+  }
+
+  const finalUserQuery = userQueryFromBody || userQueryFromQuery;
+
+  if (!finalUserQuery) {
+    return NextResponse.json({ error: "Missing 'user_query'. Please provide it either as a query parameter or in the JSON body for POST/PUT/PATCH requests." }, { status: 400 });
   }
 
   try {
     const input: GenerateRuntimeResponseInput = {
       pathSlug,
-      userQuery,
+      userQuery: finalUserQuery,
       httpMethod,
-      requestBody: requestBodyString,
+      requestBody: finalRequestBodyString,
       userApiKey,
     };
     const result = await generateRuntimeResponse(input);

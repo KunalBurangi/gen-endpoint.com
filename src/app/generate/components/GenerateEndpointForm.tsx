@@ -93,16 +93,13 @@ export function GenerateEndpointForm() {
     if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
       if (generatedOutput.exampleRequestBody && generatedOutput.exampleRequestBody.trim() !== "" && generatedOutput.exampleRequestBody.trim() !== "{}") {
         try {
-          // Validate and format JSON
           const parsedJson = JSON.parse(generatedOutput.exampleRequestBody);
           exampleRequestBodyForSimulation = JSON.stringify(parsedJson, null, 2);
         } catch (e) {
-          // If AI provides invalid JSON for request body, use a fallback
           console.warn("AI provided invalid JSON for exampleRequestBody:", generatedOutput.exampleRequestBody);
           exampleRequestBodyForSimulation = '{\n  "key": "value",\n  "note": "AI-provided request body was invalid. Modify this sample body as needed for simulation."\n}';
         }
       } else {
-        // Fallback if AI doesn't provide a specific one, or provides an empty one.
         exampleRequestBodyForSimulation = '{\n  "key": "value",\n  "note": "AI did not provide a specific request body. Modify this sample body as needed for simulation."\n}';
       }
     }
@@ -119,58 +116,47 @@ export function GenerateEndpointForm() {
   useEffect(() => {
     if (generatedOutput && generatedOutput.suggestedPath && originalUserPrompt && typeof window !== "undefined") {
       const slug = generatedOutput.suggestedPath.startsWith('/api/')
-        ? generatedOutput.suggestedPath.substring(5) // remove /api/
+        ? generatedOutput.suggestedPath.substring(5)
         : generatedOutput.suggestedPath.startsWith('/')
-        ? generatedOutput.suggestedPath.substring(1) // remove leading /
+        ? generatedOutput.suggestedPath.substring(1)
         : generatedOutput.suggestedPath;
 
       if (slug) {
-        const runtimeUrlBase = `/api/runtime/${slug}?user_query=${encodeURIComponent(originalUserPrompt)}`;
-        const userApiKey = getUserApiKey();
         const origin = window.location.origin;
+        const userApiKey = getUserApiKey();
         const apiKeyHeader = userApiKey ? `-H "X-Goog-Api-Key: ${userApiKey}"` : `-H "X-Goog-Api-Key: YOUR_GOOGLE_AI_KEY"`;
         const contentTypeHeader = `-H "Content-Type: application/json"`;
-        
-        let command = "";
         const method = generatedOutput.httpMethod.toUpperCase();
-        // Use AI-provided exampleRequestBody if available and method needs a body, otherwise a generic one.
-        let exampleBodyForCurl = '{\n  "note": "Replace with your JSON body if needed for POST/PUT/PATCH."\n}';
-        if ((method === 'POST' || method === 'PUT' || method === 'PATCH') && generatedOutput.exampleRequestBody && generatedOutput.exampleRequestBody.trim() !== "" && generatedOutput.exampleRequestBody.trim() !== "{}") {
+        
+        let runtimeUrl = `${origin}/api/runtime/${slug}`;
+        let command = "";
+        let curlData = "";
+
+        if (['POST', 'PUT', 'PATCH'].includes(method)) {
+          // user_query goes into body for these methods
+          let bodyPayload: any = { user_query: originalUserPrompt };
+          if (generatedOutput.exampleRequestBody && generatedOutput.exampleRequestBody.trim() !== "" && generatedOutput.exampleRequestBody.trim() !== "{}") {
             try {
-                const parsed = JSON.parse(generatedOutput.exampleRequestBody);
-                exampleBodyForCurl = JSON.stringify(parsed, null, 2); // Formatted for curl
+              const exampleParsed = JSON.parse(generatedOutput.exampleRequestBody);
+              bodyPayload = { ...bodyPayload, ...exampleParsed };
             } catch (e) {
-                // Keep generic if AI's is invalid
+              // if exampleRequestBody is not valid JSON, just use user_query
+              console.warn("Could not parse exampleRequestBody for curl command, using only user_query in body.");
             }
+          }
+          curlData = `-d '${JSON.stringify(bodyPayload, null, 2)}'`;
+          command = `curl -X ${method} "${runtimeUrl}" ${apiKeyHeader} ${contentTypeHeader} ${curlData}`;
+          setDisplayedRuntimeUrl(runtimeUrl); // URL is cleaner
+        } else { // GET, DELETE
+          runtimeUrl += `?user_query=${encodeURIComponent(originalUserPrompt)}`;
+          command = `curl -X ${method} "${runtimeUrl}" ${apiKeyHeader}`;
+          setDisplayedRuntimeUrl(runtimeUrl);
         }
-
-
-        switch (method) {
-          case 'GET':
-            command = `curl -X GET "${origin}${runtimeUrlBase}" ${apiKeyHeader}`;
-            break;
-          case 'POST':
-            command = `curl -X POST "${origin}${runtimeUrlBase}" ${apiKeyHeader} ${contentTypeHeader} -d '${exampleBodyForCurl}'`;
-            break;
-          case 'PUT':
-            command = `curl -X PUT "${origin}${runtimeUrlBase}" ${apiKeyHeader} ${contentTypeHeader} -d '${exampleBodyForCurl}'`;
-            break;
-          case 'PATCH':
-            command = `curl -X PATCH "${origin}${runtimeUrlBase}" ${apiKeyHeader} ${contentTypeHeader} -d '${exampleBodyForCurl}'`;
-            break;
-          case 'DELETE':
-            command = `curl -X DELETE "${origin}${runtimeUrlBase}" ${apiKeyHeader}`;
-            break;
-          default:
-            command = `# AI generated an HTTP method (${method}) not currently supported by the live runtime tester example. You can still test it manually.`;
-        }
+        
         setDynamicCurlCommand(command);
-        setDisplayedRuntimeUrl(`${origin}${runtimeUrlBase}`);
       }
     } else if (!generatedOutput) {
-        setDynamicCurlCommand(
-            '# curl command will appear here once endpoint details are generated.'
-        );
+        setDynamicCurlCommand('# curl command will appear here once endpoint details are generated.');
         setDisplayedRuntimeUrl('YOUR_APP_ORIGIN/api/runtime/... (will populate when endpoint is generated)');
     }
   }, [generatedOutput, originalUserPrompt]);
@@ -294,16 +280,17 @@ export function GenerateEndpointForm() {
                     <ol className="list-decimal list-inside text-xs space-y-1 text-muted-foreground">
                       <li>Make a {generatedOutput.httpMethod.toUpperCase()} request to the URL above.</li>
                       <li>You <strong>MUST</strong> include your Google AI API Key as a request header: <code className="text-xs bg-muted px-1 py-0.5 rounded">X-Goog-Api-Key: YOUR_API_KEY</code>.</li>
-                      {['POST', 'PUT', 'PATCH'].includes(generatedOutput.httpMethod.toUpperCase()) && (
-                        <li>For {generatedOutput.httpMethod.toUpperCase()}, include a JSON body with your request. The AI will consider this body. The example `curl` command provides a sample derived from the AI's example request body if available, or a generic placeholder.</li>
+                      {['POST', 'PUT', 'PATCH'].includes(generatedOutput.httpMethod.toUpperCase()) ? (
+                        <li>For {generatedOutput.httpMethod.toUpperCase()} requests, include a JSON body. This body <strong>MUST</strong> contain a <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code> field with your original prompt text. You can include other data in the body as well, which the AI will consider. The example `curl` command demonstrates this.</li>
+                      ) : (
+                        <li>The <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code> parameter in the URL should be your original prompt (it&apos;s URL-encoded in the example URL).</li>
                       )}
-                      <li>The <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code> parameter in the URL should be your original prompt (it&apos;s already URL-encoded in the example URL).</li>
                     </ol>
                     <p className="text-sm mt-2 font-medium">Example <code className="text-xs bg-muted px-1 py-0.5 rounded">curl</code> command:</p>
                     <CodeBlock code={dynamicCurlCommand} language="bash" />
                      <p className="text-xs text-muted-foreground mt-1">
                       Note: Replace <code className="text-xs bg-muted px-1 py-0.5 rounded">YOUR_API_KEY</code> with your actual key if you haven&apos;t saved it in the API Key Manager, or if it&apos;s not detected.
-                      The live runtime endpoint&apos;s response depends on the AI&apos;s interpretation of your <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code>, the HTTP method, and any request body provided.
+                      For POST/PUT/PATCH, ensure your JSON body includes the `user_query` field as shown in the example curl command.
                     </p>
                   </CardContent>
                 </Card>
