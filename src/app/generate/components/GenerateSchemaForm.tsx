@@ -69,19 +69,32 @@ export function GenerateSchemaForm() {
       toast({ title: "Success", description: "JSON Schema generated." });
     } catch (error) {
       console.error("Error generating JSON schema:", error);
-      let description = "Failed to generate JSON schema.";
-      if (error instanceof Error) {
-        if (error.message.includes("User API key is required")) {
+      let title = "Error";
+      let description = "An unexpected error occurred while generating JSON schema.";
+      
+      if (typeof error === 'object' && error !== null) {
+        const errorMessage = (error as any).message || String(error);
+
+        if (errorMessage.includes("User API key is required")) {
           description = "A Google AI API key is required. Please provide one in the API Key Manager section above.";
-        } else if (error.message.includes("API key not valid")) {
+          title = "API Key Required";
+        } else if (errorMessage.includes("API key not valid")) {
           description = "API key not valid. Please check your key in the API Key Manager section.";
-        } else if (error.message.includes("503") || error.message.toLowerCase().includes("model is overloaded") || error.message.toLowerCase().includes("service unavailable")) {
+          title = "Invalid API Key";
+        } else if (errorMessage.includes("503") || errorMessage.toLowerCase().includes("model is overloaded") || errorMessage.toLowerCase().includes("service unavailable")) {
           description = "The AI model is currently overloaded or unavailable. Please try again in a few moments.";
-        } else if (error.message.includes("AI response could not be parsed")) {
+          title = "Service Unavailable";
+        } else if (errorMessage.includes("AI response could not be parsed")) {
           description = "The AI returned a response that couldn't be understood. Please try rephrasing your input or try again later.";
+          title = "AI Response Error";
+        } else if (errorMessage) {
+          description = errorMessage;
         }
+      } else if (typeof error === 'string') {
+        description = error;
       }
-      toast({ variant: "destructive", title: "Error", description });
+
+      toast({ variant: "destructive", title: title, description: description });
     } finally {
       setIsLoading(false);
     }
@@ -127,3 +140,5 @@ export function GenerateSchemaForm() {
   );
 }
 
+
+    

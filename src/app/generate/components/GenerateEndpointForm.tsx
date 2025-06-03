@@ -128,19 +128,32 @@ Ensure your entire output is a single JSON object matching the required output s
       toast({ title: "Success", description: "API Endpoint details generated." });
     } catch (error) {
       console.error("Error generating API endpoint:", error);
-      let description = "Failed to generate API endpoint details.";
-      if (error instanceof Error) {
-        if (error.message.includes("User API key is required")) {
+      let title = "Error";
+      let description = "An unexpected error occurred while generating API endpoint details.";
+
+      if (typeof error === 'object' && error !== null) {
+        const errorMessage = (error as any).message || String(error);
+
+        if (errorMessage.includes("User API key is required")) {
           description = "A Google AI API key is required. Please provide one in the API Key Manager section above.";
-        } else if (error.message.includes("API key not valid")) {
+          title = "API Key Required";
+        } else if (errorMessage.includes("API key not valid")) {
           description = "API key not valid. Please check your key in the API Key Manager section.";
-        } else if (error.message.includes("503") || error.message.toLowerCase().includes("model is overloaded") || error.message.toLowerCase().includes("service unavailable")) {
+          title = "Invalid API Key";
+        } else if (errorMessage.includes("503") || errorMessage.toLowerCase().includes("model is overloaded") || errorMessage.toLowerCase().includes("service unavailable")) {
           description = "The AI model is currently overloaded or unavailable. Please try again in a few moments.";
-        } else if (error.message.includes("AI response could not be parsed") || error.message.includes("AI generated data that was not valid JSON") || error.message.includes("AI response was empty or could not be parsed to the GenerateApiEndpointOutputSchema") || error.message.includes("AI message")) {
-            description = "The AI returned data that couldn't be processed as valid JSON or was empty. Try rephrasing your query or ensure the AI can generate valid JSON for your prompt.";
+          title = "Service Unavailable";
+        } else if (errorMessage.includes("AI response could not be parsed") || errorMessage.includes("AI generated data that was not valid JSON") || errorMessage.includes("AI response was empty or could not be parsed") || errorMessage.includes("AI message")) {
+            description = "The AI returned data that couldn't be processed or was empty. Try rephrasing your query or ensure the AI can generate valid JSON for your prompt.";
+            title = "AI Response Error";
+        } else if (errorMessage) {
+          description = errorMessage;
         }
+      } else if (typeof error === 'string') {
+        description = error;
       }
-      toast({ variant: "destructive", title: "Error", description });
+      
+      toast({ variant: "destructive", title: title, description: description });
     } finally {
       setIsLoading(false);
     }
@@ -199,7 +212,9 @@ Ensure your entire output is a single JSON object matching the required output s
           if (formData.requestBodyExample && formData.requestBodyExample.trim() !== "") {
             try {
               const userExampleParsed = JSON.parse(formData.requestBodyExample.trim());
-              bodyPayloadForRuntime = { ...userExampleParsed, ...bodyPayloadForRuntime }; 
+              // Merge user's example body, ensuring user_query is at the top level
+              const { user_query: queryFromExample, ...actualData } = userExampleParsed;
+              bodyPayloadForRuntime = { ...actualData, ...bodyPayloadForRuntime };
             } catch (e) {
               console.warn("Could not parse user's requestBodyExample for runtime curl command's data payload.");
             }
@@ -207,10 +222,11 @@ Ensure your entire output is a single JSON object matching the required output s
           const curlData = `-d '${JSON.stringify(bodyPayloadForRuntime, null, 2)}'`;
           command = `curl -X ${method} "${runtimeUrl}" ${apiKeyHeader} ${contentTypeHeader} ${curlData}`;
         } else { // GET, DELETE
-          runtimeUrl += `?prompt=${encodeURIComponent(formData.prompt)}`;
+          let queryParams = `?prompt=${encodeURIComponent(formData.prompt)}`;
           if (method === 'GET' && formData.limit) {
-            runtimeUrl += `&limit=${formData.limit}`;
+            queryParams += `&limit=${formData.limit}`;
           }
+          runtimeUrl += queryParams;
           command = `curl -X ${method} "${runtimeUrl}" ${apiKeyHeader}`;
         }
         setDisplayedRuntimeUrl(runtimeUrl);
@@ -434,6 +450,6 @@ Ensure your entire output is a single JSON object matching the required output s
     </Form>
   );
 }
-
+    
 
     
