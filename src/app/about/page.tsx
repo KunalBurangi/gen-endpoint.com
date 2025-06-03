@@ -21,12 +21,11 @@ export default function AboutPage() {
         <CardHeader className="text-center">
           <div className="w-32 h-32 rounded-full mx-auto mb-4 overflow-hidden border-4 border-primary shadow-md">
             <Image
-              src="https://placehold.co/128x128.png"
+              src="/images/kunal-profile.jpg" // Path relative to the public folder
               alt="Kunal Burangi"
               width={128}
               height={128}
               className="object-cover"
-              data-ai-hint="profile photo"
             />
           </div>
           <CardTitle className="text-3xl font-bold font-headline text-primary">
