@@ -12,11 +12,10 @@ export default function HomePage() {
     <div className="space-y-12">
       <section className="text-center py-10 bg-card rounded-lg shadow-lg">
         <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary mb-6">
-          Welcome to Gen-Endpoint
+          Gen-Endpoint: Your Hub for Free Public APIs & AI Generation Tools
         </h1>
         <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-8 px-4">
-          Explore our built-in API endpoints, or use AI-powered tools to help you design and generate
-          responses & schemas for your own API development.
+          Explore a collection of free public API endpoints perfect for testing, learning, and development. Gen-Endpoint also empowers you with AI-driven tools to effortlessly design and generate Next.js API handlers, JSON schemas, and sample data for your projects.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
           <Button size="lg" asChild>
