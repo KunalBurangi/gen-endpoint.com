@@ -101,9 +101,15 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/users',
-        description: 'Retrieves a list of users. Supports an optional `limit` query parameter to control the number of users returned (e.g., `?limit=2`).',
-        exampleRequest: 'Path: /api/users?limit=2',
-        exampleResponse: '[\n  {"id": "usr_1", "name": "Alice Wonderland", "email": "alice@example.com", "role": "admin", "createdAt": "2024-01-10T10:00:00Z", "profile": {"bio": "Curiouser and curiouser!", "avatarUrl": "https://placehold.co/100x100.png"}},\n  {"id": "usr_2", "name": "Bob The Builder", "email": "bob@example.com", "role": "editor", "createdAt": "2024-01-11T11:00:00Z", "profile": {"bio": "Can we fix it?", "avatarUrl": "https://placehold.co/100x100.png"}}\n]'
+        description: 'Retrieves a list of users. Supports an optional `limit` query parameter (e.g., `?limit=5`) to control the number of users returned. If no limit is provided, all users are returned.',
+        exampleRequest: 'Path: /api/users?limit=5',
+        exampleResponse: JSON.stringify([
+          {id: "usr_1", name: "Alice Wonderland", email: "alice@example.com", role: "admin", createdAt: "2024-01-10T10:00:00Z", profile: {"bio": "Curiouser and curiouser!", "avatarUrl": "https://placehold.co/100x100.png"}},
+          {id: "usr_2", name: "Bob The Builder", email: "bob@example.com", role: "editor", createdAt: "2024-01-11T11:00:00Z", profile: {"bio": "Can we fix it?", "avatarUrl": "https://placehold.co/100x100.png"}},
+          {id: "usr_3", name: "Charlie Chaplin", email: "charlie@example.com", role: "viewer", createdAt: "2024-01-12T12:00:00Z", profile: {"bio": "A day without laughter is a day wasted.", "avatarUrl": "https://placehold.co/100x100.png"}},
+          {id: "usr_4", name: "Diana Prince", email: "diana@example.com", role: "admin", createdAt: "2024-01-13T13:00:00Z", profile: {"bio": "Wonder Woman", "avatarUrl": "https://placehold.co/100x100.png"}},
+          {id: "usr_5", name: "Edward Scissorhands", email: "edward@example.com", role: "viewer", createdAt: "2024-01-14T14:00:00Z", profile: {"bio": "I am not complete.", "avatarUrl": "https://placehold.co/100x100.png"}}
+        ], null, 2)
       },
       {
         method: 'GET',
@@ -117,7 +123,7 @@ export const publicApis: ApiDefinition[] = [
         path: '/api/users',
         description: 'Creates a new user.',
         exampleRequest: '{\n  "name": "Charlie Brown",\n  "email": "charlie@example.com",\n  "password": "supersecretpassword",\n  "role": "viewer"\n}',
-        exampleResponse: '{"id": "usr_3", "name": "Charlie Brown", "email": "charlie@example.com", "role": "viewer", "createdAt": "2024-08-16T14:30:00Z"}'
+        exampleResponse: '{"id": "usr_new", "name": "Charlie Brown", "email": "charlie@example.com", "role": "viewer", "createdAt": "2024-08-16T14:30:00Z"}'
       },
       {
         method: 'PUT',
@@ -190,19 +196,13 @@ export const publicApis: ApiDefinition[] = [
         path: '/api/auth/status',
         description: 'Checks the current authentication status of the user.',
         exampleResponse: '{\n  "isAuthenticated": true,\n  "user": {"id": "usr_1", "name": "Alice Wonderland", "email": "alice@example.com", "role": "admin"},\n  "checkedAt": "2024-08-16T17:05:00Z"\n}'
-        // Or for unauthenticated:
-        // exampleResponse: '{\n  "isAuthenticated": false,\n  "user": null,\n  "checkedAt": "2024-08-16T17:06:00Z"\n}'
       }
     ]
   }
 ];
 
-// Update categories based on the defined APIs
 export const apiCategories: string[] = Array.from(new Set(publicApis.map(api => api.category)));
 
-// Placeholder for a function to get an API by ID, useful for detail pages
-// This is not used by the current list page but would be for an API detail page.
 export const getApiById = (id: string): ApiDefinition | undefined => {
   return publicApis.find(api => api.id === id);
 };
-
