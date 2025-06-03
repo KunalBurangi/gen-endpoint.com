@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Image from 'next/image';
-import { Github, Linkedin, Twitter, ExternalLink } from 'lucide-react';
+import { Github, Linkedin, Twitter, ExternalLink, Mail } from 'lucide-react'; // Added Mail icon
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -36,7 +36,7 @@ export default function AboutPage() {
             Passionate Developer / Creator of Gen-Endpoint
           </CardDescription>
         </CardHeader>
-        <CardContent className="prose prose-lg max-w-none dark:prose-invert text-center">
+        <CardContent className="prose prose-lg max-w-none dark:prose-invert text-left md:text-center px-4 md:px-6">
           <p>
             Hi there! 👋 I'm glad you stopped by.
           </p>
@@ -46,24 +46,49 @@ export default function AboutPage() {
           <p>
             At Gen Endpoint, the goal is simple: Build reliable, developer-friendly endpoints that just work.
           </p>
+
+          <h3 className="text-xl font-semibold mt-8 mb-3 text-primary text-center">What I Do</h3>
+          <ul className="list-disc list-inside space-y-1 text-left mx-auto max-w-md">
+            <li>🔧 Create and maintain useful public API endpoints</li>
+            <li>🤖 Experiment with AI integrations, automation, and data processing</li>
+            <li>🚀 Build backend systems using Node.js, TypeScript, and cloud services</li>
+            <li>🧪 Test new technologies and make them accessible to others</li>
+          </ul>
+
+          <h3 className="text-xl font-semibold mt-8 mb-3 text-primary text-center">Why I Built Gen Endpoint</h3>
+          <p className="text-left md:text-center">
+            I found myself frequently needing test APIs, AI integrations, or quick backend solutions — so instead of rebuilding the same things over and over, I decided to make them available to anyone who needs them.
+          </p>
+          <p className="text-left md:text-center">
+            Gen Endpoint is still growing, and your feedback or collaboration is always welcome.
+          </p>
+
+          <h3 className="text-xl font-semibold mt-8 mb-3 text-primary text-center">Get in Touch</h3>
+          <p className="text-left md:text-center">
+            Have ideas, questions, or want to collaborate?
+            Drop me a message at <a href="mailto:kunal.burangi96@gmail.com" className="text-accent hover:underline">kunal.burangi96@gmail.com</a> or connect with me via the links below.
+          </p>
+          
           <div className="mt-8 flex justify-center gap-4">
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="GitHub">
               <Github className="h-7 w-7" />
-              <span className="sr-only">GitHub</span>
             </a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="LinkedIn">
               <Linkedin className="h-7 w-7" />
-              <span className="sr-only">LinkedIn</span>
             </a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Twitter">
               <Twitter className="h-7 w-7" />
-              <span className="sr-only">Twitter</span>
             </a>
-            <a href="https://example.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+             <a href="mailto:kunal.burangi96@gmail.com" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Email">
+              <Mail className="h-7 w-7" />
+            </a>
+            <a href="https://example.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Personal Website">
               <ExternalLink className="h-7 w-7" />
-              <span className="sr-only">Personal Website</span>
             </a>
           </div>
+           <p className="mt-8 text-center">
+            Thanks for visiting — let’s build something cool! 🚀
+          </p>
         </CardContent>
       </Card>
 
