@@ -21,10 +21,10 @@ export default function AboutPage() {
         <CardHeader className="text-center">
           <div className="w-32 h-32 rounded-full mx-auto mb-4 overflow-hidden border-4 border-primary shadow-md">
             <Image
-              src="https://storage.googleapis.com/project-idx-hackathon-team-idx-file-upload-prod/images/app-Pz6W9m_uO2R2wN16e7Mv/Kunal.jpg"
+              src="https://placehold.co/128x128.png"
               alt="Kunal Burangi"
-              width={200}
-              height={200}
+              width={128}
+              height={128}
               className="object-cover"
               data-ai-hint="profile photo"
             />
