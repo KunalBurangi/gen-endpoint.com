@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { Network, Home, Settings2 } from 'lucide-react'; // Settings2 for Generate, Home for homepage
+import { Network, Home, Settings2, Info } from 'lucide-react'; // Added Info icon
 import { Button } from '@/components/ui/button';
 
 export function Header() {
@@ -11,17 +11,23 @@ export function Header() {
           <Network className="h-7 w-7" />
           <span>Gen-Endpoint</span>
         </Link>
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-2 sm:gap-4">
           <Button variant="ghost" asChild>
             <Link href="/">
-              <Home className="h-4 w-4 mr-2" />
-              Home
+              <Home className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Home</span>
             </Link>
           </Button>
           <Button variant="ghost" asChild>
             <Link href="/generate">
-              <Settings2 className="h-4 w-4 mr-2" />
-              AI API Tools
+              <Settings2 className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">AI API Tools</span>
+            </Link>
+          </Button>
+          <Button variant="ghost" asChild>
+            <Link href="/about">
+              <Info className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">About</span>
             </Link>
           </Button>
         </nav>
