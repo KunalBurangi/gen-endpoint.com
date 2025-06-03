@@ -31,16 +31,22 @@ const FormSchema = z.object({
     (val) => (val === "" || val === undefined || val === null ? undefined : Number(val)),
     z.number().int().positive().optional()
   ),
-  requestBodyExample: z.string().optional().refine((val, ctx) => {
-    if (['POST', 'PUT', 'PATCH'].includes(ctx.path[0]?.httpMethod) && val && val.trim() !== "") {
+  requestBodyExample: z.string().optional(), // No .refine here, will be handled by superRefine
+})
+.superRefine((data, ctx) => {
+  if (['POST', 'PUT', 'PATCH'].includes(data.httpMethod)) {
+    if (data.requestBodyExample && data.requestBodyExample.trim() !== "") {
       try {
-        JSON.parse(val);
+        JSON.parse(data.requestBodyExample);
       } catch (e) {
-        return false;
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "If provided for POST/PUT/PATCH, example request body must be valid JSON.",
+          path: ["requestBodyExample"], // Correctly scope the error to this field
+        });
       }
     }
-    return true;
-  }, { message: "If provided for POST/PUT/PATCH, example request body must be valid JSON."}),
+  }
 });
 
 type FormData = z.infer<typeof FormSchema>;
@@ -48,7 +54,7 @@ type FormData = z.infer<typeof FormSchema>;
 export function GenerateEndpointForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedOutput, setGeneratedOutput] = useState<GenerateApiEndpointOutput | null>(null);
-  const [constructedAiPrompt, setConstructedAiPrompt] = useState<string>(""); // Store the detailed prompt sent to AI
+  const [constructedAiPrompt, setConstructedAiPrompt] = useState<string>("");
   const [dynamicCurlCommand, setDynamicCurlCommand] = useState<string>(
     '# curl command will appear here once endpoint details are generated.'
   );
@@ -112,13 +118,10 @@ Ensure your entire output is a single JSON object matching the required output s
 
     try {
       const result = await generateApiEndpoint(inputData);
-      // If user provided a request body, and AI respected it, great.
-      // If AI generated one and user didn't, use AI's.
-      // If user provided one, but AI's is different (e.g. empty), prefer user's for display IF valid.
       let finalResult = {...result};
       if (['POST', 'PUT', 'PATCH'].includes(data.httpMethod) && data.requestBodyExample && data.requestBodyExample.trim() !== "") {
          try {
-            JSON.parse(data.requestBodyExample.trim()); // check if user's is valid JSON
+            JSON.parse(data.requestBodyExample.trim()); 
             finalResult.exampleRequestBody = data.requestBodyExample.trim();
          } catch (e) {
             // user's example was not valid JSON, stick with AI's
@@ -151,7 +154,6 @@ Ensure your entire output is a single JSON object matching the required output s
     const method = generatedOutput.httpMethod.toUpperCase() as ApiEndpoint['method'];
     let exampleRequestBodyForSimulation = generatedOutput.exampleRequestBody;
 
-    // Prefer user-provided request body for simulation if it was given for relevant methods
     if (['POST', 'PUT', 'PATCH'].includes(method) && form.getValues('requestBodyExample') && form.getValues('requestBodyExample').trim() !== "") {
         try {
             const parsedUserJson = JSON.parse(form.getValues('requestBodyExample').trim());
@@ -160,12 +162,10 @@ Ensure your entire output is a single JSON object matching the required output s
             console.warn("User-provided requestBodyExample is not valid JSON, using AI's for simulation.");
         }
     } else if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
-        // If AI didn't provide one, but user also didn't, create a generic one for simulation
         if (!exampleRequestBodyForSimulation || exampleRequestBodyForSimulation.trim() === "" || exampleRequestBodyForSimulation.trim() === "{}") {
              exampleRequestBodyForSimulation = '{\n  "key": "value",\n  "note": "No specific request body provided by user or AI. Modify this sample body as needed for simulation."\n}';
         }
     }
-
 
     simulatedEndpoint = {
       method: method,
@@ -197,11 +197,10 @@ Ensure your entire output is a single JSON object matching the required output s
         const formData = form.getValues();
 
         if (['POST', 'PUT', 'PATCH'].includes(method)) {
-          let bodyPayload: any = { user_query: constructedAiPrompt }; // Use the detailed constructed prompt
+          let bodyPayload: any = { user_query: constructedAiPrompt }; 
           if (formData.requestBodyExample && formData.requestBodyExample.trim() !== "") {
             try {
               const userExampleParsed = JSON.parse(formData.requestBodyExample.trim());
-              // Merge user's example data, but user_query takes precedence if there's a conflict (unlikely)
               bodyPayload = { ...userExampleParsed, ...bodyPayload }; 
             } catch (e) {
               console.warn("Could not parse user's requestBodyExample for runtime curl command.");
@@ -210,7 +209,7 @@ Ensure your entire output is a single JSON object matching the required output s
           const curlData = `-d '${JSON.stringify(bodyPayload, null, 2)}'`;
           command = `curl -X ${method} "${runtimeUrl}" ${apiKeyHeader} ${contentTypeHeader} ${curlData}`;
           setDisplayedRuntimeUrl(runtimeUrl);
-        } else { // GET, DELETE
+        } else { 
           runtimeUrl += `?user_query=${encodeURIComponent(constructedAiPrompt)}`;
           command = `curl -X ${method} "${runtimeUrl}" ${apiKeyHeader}`;
           setDisplayedRuntimeUrl(runtimeUrl);
@@ -223,7 +222,6 @@ Ensure your entire output is a single JSON object matching the required output s
         setDisplayedRuntimeUrl('YOUR_APP_ORIGIN/api/runtime/... (will populate when endpoint is generated)');
     }
   }, [generatedOutput, constructedAiPrompt, form]);
-
 
   return (
     <Form {...form}>
@@ -433,4 +431,3 @@ Ensure your entire output is a single JSON object matching the required output s
     </Form>
   );
 }
-
