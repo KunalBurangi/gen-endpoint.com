@@ -29,12 +29,23 @@ let products = [
     id: "prod_789",
     name: "Ergonomic Mechanical Keyboard",
     category: "Electronics",
-    "price": 159.99,
-    "stock": 0, // Example of out of stock
+    price: 159.99,
+    stock: 0, // Example of out of stock
     imageUrl: "https://placehold.co/300x200.png",
     description: "Clicky and comfortable.",
     details: {"switchType": "Cherry MX Brown", "layout": "Tenkeyless"},
     reviews: []
+  },
+  {
+    id: "prod_101",
+    name: "Organic Whole Bean Coffee",
+    category: "Groceries",
+    price: 15.99,
+    stock: 200,
+    imageUrl: "https://placehold.co/300x200.png",
+    description: "Rich and aromatic dark roast.",
+    details: {"origin": "Colombia", "roast": "Dark"},
+    reviews: [{"rating": 5, "comment": "Best coffee I've had!"}]
   }
 ];
 
@@ -43,8 +54,9 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const category = searchParams.get('category');
   const inStock = searchParams.get('inStock'); // 'true' or 'false'
+  const limitParam = searchParams.get('limit');
 
-  let filteredProducts = products;
+  let filteredProducts = [...products]; // Start with a copy
 
   if (category) {
     filteredProducts = filteredProducts.filter(p => p.category.toLowerCase() === category.toLowerCase());
@@ -54,6 +66,13 @@ export async function GET(request: NextRequest) {
     filteredProducts = filteredProducts.filter(p => p.stock > 0);
   } else if (inStock === 'false') {
     filteredProducts = filteredProducts.filter(p => p.stock === 0);
+  }
+
+  if (limitParam) {
+    const limit = parseInt(limitParam, 10);
+    if (!isNaN(limit) && limit > 0) {
+      filteredProducts = filteredProducts.slice(0, limit);
+    }
   }
 
   return NextResponse.json(filteredProducts);

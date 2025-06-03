@@ -101,8 +101,9 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/users',
-        description: 'Retrieves a list of all users.',
-        exampleResponse: '[\n  {"id": "usr_1", "name": "Alice Wonderland", "email": "alice@example.com", "role": "admin", "createdAt": "2024-01-10T10:00:00Z"},\n  {"id": "usr_2", "name": "Bob The Builder", "email": "bob@example.com", "role": "editor", "createdAt": "2024-01-11T11:00:00Z"}\n]'
+        description: 'Retrieves a list of users. Supports an optional `limit` query parameter to control the number of users returned (e.g., `?limit=2`).',
+        exampleRequest: 'Path: /api/users?limit=2',
+        exampleResponse: '[\n  {"id": "usr_1", "name": "Alice Wonderland", "email": "alice@example.com", "role": "admin", "createdAt": "2024-01-10T10:00:00Z", "profile": {"bio": "Curiouser and curiouser!", "avatarUrl": "https://placehold.co/100x100.png"}},\n  {"id": "usr_2", "name": "Bob The Builder", "email": "bob@example.com", "role": "editor", "createdAt": "2024-01-11T11:00:00Z", "profile": {"bio": "Can we fix it?", "avatarUrl": "https://placehold.co/100x100.png"}}\n]'
       },
       {
         method: 'GET',
@@ -144,9 +145,9 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/products',
-        description: 'Retrieves a list of all available products. Supports optional query parameters for filtering (e.g., ?category=electronics&inStock=true).',
-        exampleRequest: 'Optional query: /api/products?category=Books',
-        exampleResponse: '[\n  {"id": "prod_123", "name": "The Pragmatic Programmer", "category": "Books", "price": 29.99, "stock": 150, "imageUrl": "https://placehold.co/300x200.png", "description": "From journeyman to master."},\n  {"id": "prod_456", "name": "Wireless Noise-Cancelling Headphones", "category": "Electronics", "price": 199.99, "stock": 75, "imageUrl": "https://placehold.co/300x200.png", "description": "Immersive sound experience."}\n]'
+        description: 'Retrieves a list of products. Supports optional query parameters for filtering (e.g., `?category=electronics&inStock=true`) and `limit` to control the number of products returned (e.g., `?limit=1`).',
+        exampleRequest: 'Path: /api/products?category=Books&limit=1',
+        exampleResponse: '[\n  {"id": "prod_123", "name": "The Pragmatic Programmer", "category": "Books", "price": 29.99, "stock": 150, "imageUrl": "https://placehold.co/300x200.png", "description": "From journeyman to master.", "details": {"pages": 352, "author": "David Thomas, Andrew Hunt"}, "reviews": [{"rating": 5, "comment": "A must-read!"}]}\n]'
       },
       {
         method: 'GET',
