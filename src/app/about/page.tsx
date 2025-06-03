@@ -22,7 +22,7 @@ export default function AboutPage() {
           <div className="w-32 h-32 rounded-full mx-auto mb-4 overflow-hidden border-4 border-primary shadow-md">
             <Image
               src="https://placehold.co/200x200.png"
-              alt="Your Name"
+              alt="Kunal Burangi"
               width={200}
               height={200}
               className="object-cover"
@@ -30,7 +30,7 @@ export default function AboutPage() {
             />
           </div>
           <CardTitle className="text-3xl font-bold font-headline text-primary">
-            Your Name / Project Name
+            Kunal Burangi
           </CardTitle>
           <CardDescription className="text-lg mt-1 text-muted-foreground">
             Passionate Developer / Creator of Gen-Endpoint
@@ -38,18 +38,14 @@ export default function AboutPage() {
         </CardHeader>
         <CardContent className="prose prose-lg max-w-none dark:prose-invert text-center">
           <p>
-            Welcome to the About Me page! This is where you can share more information
-            about yourself, your project, or your company.
+            Hi there! 👋 I'm glad you stopped by.
           </p>
           <p>
-            Gen-Endpoint is a powerful platform designed to help developers explore, test, and generate API endpoints
-            with ease, leveraging the power of AI for schema generation and mock data creation.
+            I'm the creator of Gen Endpoint — a platform built out of curiosity, passion, and a love for clean and powerful web APIs. With a background in full-stack development and a strong focus on backend systems, I created this space to share tools, endpoints, and experiments that simplify how developers work with data, APIs, and AI.
           </p>
           <p>
-            Feel free to customize this section with your personal story, project goals,
-            mission, vision, or any other details you'd like to share with your audience.
+            At Gen Endpoint, the goal is simple: Build reliable, developer-friendly endpoints that just work.
           </p>
-          
           <div className="mt-8 flex justify-center gap-4">
             <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
               <Github className="h-7 w-7" />
