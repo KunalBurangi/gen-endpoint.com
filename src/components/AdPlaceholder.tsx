@@ -1,30 +1,36 @@
 
-export function AdPlaceholder({ width = 728, height = 90, className = "" }: { width?: number; height?: number; className?: string }) {
+"use client";
+
+import { useEffect } from 'react';
+
+export function AdPlaceholder({ className = "" }: { className?: string }) {
+  useEffect(() => {
+    try {
+      if (window.adsbygoogle && typeof window.adsbygoogle.push === 'function') {
+        window.adsbygoogle.push({});
+      } else {
+        // Fallback if adsbygoogle is not ready, though the script in layout.tsx should handle init.
+        window.adsbygoogle = window.adsbygoogle || [];
+        window.adsbygoogle.push({});
+      }
+    } catch (e) {
+      console.error("AdSense push error:", e);
+    }
+  }, []); // Empty dependency array ensures this runs once on mount
+
   return (
     <div
-      className={`bg-muted border border-dashed border-border flex flex-col items-center justify-center text-muted-foreground my-4 text-center p-2 ${className}`}
-      style={{ width: '100%', maxWidth: `${width}px`, minHeight: `${height}px`, margin: '1rem auto' }}
-      aria-label="Advertisement placeholder"
+      className={`flex justify-center items-center my-4 ${className}`}
+      aria-label="Advertisement Area"
     >
-      <p className="text-sm">Ad Placeholder ({width}x{height})</p>
-      <p className="text-xs mt-1">
-        {/*
-          Replace this div's content with your Google AdSense ad unit code.
-          You get this code when you create an ad unit in your AdSense account.
-          It usually looks like an <ins> tag.
-          Example (DO NOT USE THIS DIRECTLY - GET YOUR OWN FROM ADSENSE):
-          <ins class="adsbygoogle"
-               style="display:block"
-               data-ad-client="ca-pub-YOUR_PUBLISHER_ID"
-               data-ad-slot="YOUR_AD_SLOT_ID"
-               data-ad-format="auto"
-               data-full-width-responsive="true"></ins>
-          <script>
-               (adsbygoogle = window.adsbygoogle || []).push({});
-          </script>
-        */}
-        Paste your AdSense ad unit code here.
-      </p>
+      {/* AdSense ad unit code below */}
+      {/* <!-- footer-ad --> */}
+      <ins className="adsbygoogle"
+           style={{ display: 'block' }}
+           data-ad-client="ca-pub-7546609873197379"
+           data-ad-slot="5097284517"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
     </div>
   );
 }
