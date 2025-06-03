@@ -4,9 +4,6 @@ import { generateRuntimeResponse, type GenerateRuntimeResponseInput } from '@/ai
 
 async function handleRuntimeRequest(request: NextRequest, params: { slug: string[] }, httpMethod: string) {
   const userApiKey = request.headers.get('x-goog-api-key');
-  let userQueryFromQuery = request.nextUrl.searchParams.get('user_query');
-  let userQueryFromBody: string | undefined;
-  let finalRequestBodyString: string | undefined;
   const pathSlug = params.slug ? params.slug.join('/') : '';
 
   if (!userApiKey) {
@@ -17,45 +14,63 @@ async function handleRuntimeRequest(request: NextRequest, params: { slug: string
     return NextResponse.json({ error: "Invalid path. The path for the runtime endpoint cannot be empty." }, { status: 400 });
   }
 
-  let bodyForAi: any = undefined;
+  let finalUserQueryForAi: string;
+  let requestBodyForAiString: string | undefined;
 
-  if (['POST', 'PUT', 'PATCH'].includes(httpMethod.toUpperCase())) {
+  if (httpMethod.toUpperCase() === 'GET' || httpMethod.toUpperCase() === 'DELETE') {
+    const originalUserPrompt = request.nextUrl.searchParams.get('prompt');
+    const limitParam = request.nextUrl.searchParams.get('limit');
+
+    if (!originalUserPrompt) {
+      return NextResponse.json({ error: "Missing 'prompt' query parameter for GET/DELETE request." }, { status: 400 });
+    }
+
+    finalUserQueryForAi = `The HTTP method for this request is ${httpMethod.toUpperCase()}.
+The conceptual API path being targeted is '/${pathSlug}'.
+The user's specific instruction or goal for this request is: "${originalUserPrompt}".`;
+    if (limitParam) {
+      finalUserQueryForAi += ` If applicable to the request (e.g., for lists), please consider a limit of ${limitParam} items.`;
+    }
+    finalUserQueryForAi += "\nBased on all this information, generate a concise and relevant JSON response. Only output the raw JSON data.";
+    requestBodyForAiString = undefined; // No request body for GET/DELETE in this context
+
+  } else { // POST, PUT, PATCH
+    let requestJsonBody: any;
     try {
       if (request.body) {
-        const rawBody = await request.json();
-        if (typeof rawBody === 'object' && rawBody !== null) {
-          if (rawBody.user_query && typeof rawBody.user_query === 'string') {
-            userQueryFromBody = rawBody.user_query;
-          }
-          // Prepare bodyForAi by removing user_query if it was present
-          const { user_query, ...restOfBody } = rawBody;
-          bodyForAi = Object.keys(restOfBody).length > 0 ? restOfBody : undefined;
-        } else {
-          // If rawBody is not an object (e.g. array or primitive), pass it as is
-           bodyForAi = rawBody;
-        }
-        if (bodyForAi !== undefined) {
-            finalRequestBodyString = JSON.stringify(bodyForAi);
-        }
+        requestJsonBody = await request.json();
+      } else {
+        return NextResponse.json({ error: "Request body is missing for POST/PUT/PATCH." }, { status: 400 });
       }
     } catch (e) {
-      console.warn(`Could not parse request body for ${httpMethod} /api/runtime/${pathSlug}: ${(e as Error).message}`);
-      finalRequestBodyString = undefined; // Explicitly undefined if parsing fails
+      return NextResponse.json({ error: "Invalid JSON in request body for POST/PUT/PATCH." }, { status: 400 });
     }
-  }
 
-  const finalUserQuery = userQueryFromBody || userQueryFromQuery;
+    if (typeof requestJsonBody !== 'object' || requestJsonBody === null) {
+        return NextResponse.json({ error: "Request body must be a JSON object for POST/PUT/PATCH." }, { status: 400 });
+    }
+    
+    const detailedPromptFromBody = requestJsonBody.user_query;
 
-  if (!finalUserQuery) {
-    return NextResponse.json({ error: "Missing 'user_query'. Please provide it either as a query parameter or in the JSON body for POST/PUT/PATCH requests." }, { status: 400 });
+    if (!detailedPromptFromBody || typeof detailedPromptFromBody !== 'string') {
+      return NextResponse.json({ error: "Missing 'user_query' string in JSON body for POST/PUT/PATCH, or it's not a string. This 'user_query' should be the detailed prompt describing the AI's task." }, { status: 400 });
+    }
+    finalUserQueryForAi = detailedPromptFromBody;
+
+    const { user_query, ...actualRequestBodyPayload } = requestJsonBody;
+    if (Object.keys(actualRequestBodyPayload).length > 0) {
+      requestBodyForAiString = JSON.stringify(actualRequestBodyPayload);
+    } else {
+      requestBodyForAiString = undefined;
+    }
   }
 
   try {
     const input: GenerateRuntimeResponseInput = {
       pathSlug,
-      userQuery: finalUserQuery,
+      userQuery: finalUserQueryForAi,
       httpMethod,
-      requestBody: finalRequestBodyString,
+      requestBody: requestBodyForAiString,
       userApiKey,
     };
     const result = await generateRuntimeResponse(input);
