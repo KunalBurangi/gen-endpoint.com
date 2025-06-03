@@ -26,6 +26,7 @@ export default function AboutPage() {
               width={128}
               height={128}
               className="object-cover"
+              data-ai-hint="profile photo"
             />
           </div>
           <CardTitle className="text-3xl font-bold font-headline text-primary">
