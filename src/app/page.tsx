@@ -12,7 +12,7 @@ export default function HomePage() {
     <div className="space-y-12">
       <section className="text-center py-10 bg-card rounded-lg shadow-lg">
         <h1 className="text-4xl md:text-5xl font-bold font-headline text-primary mb-6">
-          Welcome to My API Platform
+          Welcome to Gen-Endpoint
         </h1>
         <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-8 px-4">
           Explore our built-in API endpoints, or use AI-powered tools to help you design and generate

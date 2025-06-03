@@ -9,7 +9,7 @@ export async function GET() {
   const uptimeSeconds = Math.floor((Date.now() - serviceStartTime) / 1000);
   return NextResponse.json({
     status: "operational",
-    serviceName: "API Endpoint Explorer Backend",
+    serviceName: "Gen-Endpoint Backend",
     version: "1.2.3", // This could be dynamic, e.g., from package.json
     uptimeSeconds: uptimeSeconds,
     lastChecked: new Date().toISOString()

@@ -1,4 +1,5 @@
-# Firebase Studio
+
+# Gen-Endpoint
 
 This is a NextJS starter in Firebase Studio.
 

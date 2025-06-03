@@ -8,7 +8,7 @@ import { Analytics } from "@vercel/analytics/react"
 
 
 export const metadata: Metadata = {
-  title: 'My API Platform',
+  title: 'Gen-Endpoint',
   description: 'Explore and build API endpoints, with AI-powered tools for schema and response generation.',
 };
 

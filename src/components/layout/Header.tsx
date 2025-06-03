@@ -9,7 +9,7 @@ export function Header() {
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-2 text-xl font-semibold font-headline text-primary">
           <Network className="h-7 w-7" />
-          <span>My API Platform</span>
+          <span>Gen-Endpoint</span>
         </Link>
         <nav className="flex items-center gap-4">
           <Button variant="ghost" asChild>
