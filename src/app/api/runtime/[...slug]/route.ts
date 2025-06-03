@@ -14,25 +14,21 @@ async function handleRuntimeRequest(request: NextRequest, params: { slug: string
     return NextResponse.json({ error: "Invalid path. The path for the runtime endpoint cannot be empty." }, { status: 400 });
   }
 
-  let finalUserQueryForAi: string;
+  let shortUserPromptForAi: string;
   let requestBodyForAiString: string | undefined;
 
   if (httpMethod.toUpperCase() === 'GET' || httpMethod.toUpperCase() === 'DELETE') {
-    const originalUserPrompt = request.nextUrl.searchParams.get('prompt');
+    const originalUserPromptParam = request.nextUrl.searchParams.get('prompt');
     const limitParam = request.nextUrl.searchParams.get('limit');
 
-    if (!originalUserPrompt) {
-      return NextResponse.json({ error: "Missing 'prompt' query parameter for GET/DELETE request." }, { status: 400 });
+    if (!originalUserPromptParam) {
+      return NextResponse.json({ error: "Missing 'prompt' query parameter for GET/DELETE request. This should be the user's original description of the endpoint's purpose." }, { status: 400 });
     }
-
-    finalUserQueryForAi = `The HTTP method for this request is ${httpMethod.toUpperCase()}.
-The conceptual API path being targeted is '/${pathSlug}'.
-The user's specific instruction or goal for this request is: "${originalUserPrompt}".`;
+    shortUserPromptForAi = originalUserPromptParam;
     if (limitParam) {
-      finalUserQueryForAi += ` If applicable to the request (e.g., for lists), please consider a limit of ${limitParam} items.`;
+      shortUserPromptForAi += ` (Consider a limit of ${limitParam} items if applicable for a list).`;
     }
-    finalUserQueryForAi += "\nBased on all this information, generate a concise and relevant JSON response. Only output the raw JSON data.";
-    requestBodyForAiString = undefined; // No request body for GET/DELETE in this context
+    requestBodyForAiString = undefined;
 
   } else { // POST, PUT, PATCH
     let requestJsonBody: any;
@@ -50,27 +46,28 @@ The user's specific instruction or goal for this request is: "${originalUserProm
         return NextResponse.json({ error: "Request body must be a JSON object for POST/PUT/PATCH." }, { status: 400 });
     }
     
-    const detailedPromptFromBody = requestJsonBody.user_query;
+    const userQueryFromBody = requestJsonBody.user_query;
 
-    if (!detailedPromptFromBody || typeof detailedPromptFromBody !== 'string') {
-      return NextResponse.json({ error: "Missing 'user_query' string in JSON body for POST/PUT/PATCH, or it's not a string. This 'user_query' should be the detailed prompt describing the AI's task." }, { status: 400 });
+    if (!userQueryFromBody || typeof userQueryFromBody !== 'string') {
+      return NextResponse.json({ error: "Missing 'user_query' string in JSON body for POST/PUT/PATCH, or it's not a string. This 'user_query' should be the user's original, concise prompt describing the endpoint's purpose." }, { status: 400 });
     }
-    finalUserQueryForAi = detailedPromptFromBody;
+    shortUserPromptForAi = userQueryFromBody;
 
-    const { user_query, ...actualRequestBodyPayload } = requestJsonBody;
-    if (Object.keys(actualRequestBodyPayload).length > 0) {
-      requestBodyForAiString = JSON.stringify(actualRequestBodyPayload);
+    // Separate the 'user_query' from the actual data payload for the AI flow
+    const { user_query, ...actualDataPayload } = requestJsonBody;
+    if (Object.keys(actualDataPayload).length > 0) {
+      requestBodyForAiString = JSON.stringify(actualDataPayload);
     } else {
-      requestBodyForAiString = undefined;
+      requestBodyForAiString = undefined; // No actual data payload beyond the user_query
     }
   }
 
   try {
     const input: GenerateRuntimeResponseInput = {
       pathSlug,
-      userQuery: finalUserQueryForAi,
+      userQuery: shortUserPromptForAi, // This is now the short, direct user prompt
       httpMethod,
-      requestBody: requestBodyForAiString,
+      requestBody: requestBodyForAiString, // This is the actual data part of the body (if any)
       userApiKey,
     };
     const result = await generateRuntimeResponse(input);

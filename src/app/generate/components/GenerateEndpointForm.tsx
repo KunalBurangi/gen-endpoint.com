@@ -54,7 +54,8 @@ type FormData = z.infer<typeof FormSchema>;
 export function GenerateEndpointForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedOutput, setGeneratedOutput] = useState<GenerateApiEndpointOutput | null>(null);
-  const [constructedAiPromptForEndpointGen, setConstructedAiPromptForEndpointGen] = useState<string>(""); // For generating the endpoint code
+  // This constructedAiPromptForEndpointGen is the DETAILED prompt for the AI that *generates the endpoint code*.
+  const [constructedAiPromptForEndpointGen, setConstructedAiPromptForEndpointGen] = useState<string>(""); 
   const [dynamicCurlCommand, setDynamicCurlCommand] = useState<string>(
     '# curl command will appear here once endpoint details are generated.'
   );
@@ -88,20 +89,20 @@ export function GenerateEndpointForm() {
     setIsLoading(true);
     setGeneratedOutput(null);
 
-    let detailedPrompt = `The user wants to create a ${data.httpMethod} API endpoint.`;
-    detailedPrompt += `\nMain goal or description: "${data.prompt}"`;
+    let detailedPromptForCodeGeneration = `The user wants to create a ${data.httpMethod} API endpoint.`;
+    detailedPromptForCodeGeneration += `\nMain goal or description: "${data.prompt}"`;
 
     if (data.limit) {
-      detailedPrompt += `\nIt should ideally support a 'limit' query parameter. For example, a limit of ${data.limit}.`;
+      detailedPromptForCodeGeneration += `\nIt should ideally support a 'limit' query parameter. For example, a limit of ${data.limit}.`;
     }
 
     if (['POST', 'PUT', 'PATCH'].includes(data.httpMethod) && data.requestBodyExample && data.requestBodyExample.trim() !== "") {
-      detailedPrompt += `\nFor the request body, the user provided this example JSON: \n${data.requestBodyExample.trim()}\nThe generated handler code should expect a body similar to this, and the 'exampleRequestBody' output field from the AI should reflect or closely match this user-provided example.`;
+      detailedPromptForCodeGeneration += `\nFor the request body, the user provided this example JSON: \n${data.requestBodyExample.trim()}\nThe generated handler code should expect a body similar to this, and the 'exampleRequestBody' output field from the AI should reflect or closely match this user-provided example.`;
     } else if (['POST', 'PUT', 'PATCH'].includes(data.httpMethod)) {
-      detailedPrompt += `\nThe user did not provide an example request body for this ${data.httpMethod} request. If a request body is typically needed for the described functionality, please generate a suitable 'exampleRequestBody' and ensure the handler code expects it.`;
+      detailedPromptForCodeGeneration += `\nThe user did not provide an example request body for this ${data.httpMethod} request. If a request body is typically needed for the described functionality, please generate a suitable 'exampleRequestBody' and ensure the handler code expects it.`;
     }
 
-    detailedPrompt += `\n\nBased on all this information, please perform the following:
+    detailedPromptForCodeGeneration += `\n\nBased on all this information, please perform the following:
 1. Suggest a full URL path for this endpoint (it must start with '/api/').
 2. Generate the complete Next.js App Router handler function code (for a 'route.ts' file). This code should be functional, including necessary imports (like 'NextResponse') and the 'export async function ${data.httpMethod}(request) { ... }' structure. If data storage or complex logic is implied, generate a self-contained mock or simple in-memory example within the handler.
 3. Provide an 'exampleRequestBody' as a JSON string. If the user supplied an example request body, this output field should be identical or very similar to it. If the method is GET/DELETE, or if no body is appropriate, this can be an empty string or omitted.
@@ -109,10 +110,10 @@ export function GenerateEndpointForm() {
 
 Ensure your entire output is a single JSON object matching the required output schema. Do NOT include any markdown formatting like \`\`\`json ... \`\`\` around the JSON object.`;
     
-    setConstructedAiPromptForEndpointGen(detailedPrompt);
+    setConstructedAiPromptForEndpointGen(detailedPromptForCodeGeneration);
 
     const inputData: GenerateApiEndpointInput = {
-      prompt: detailedPrompt,
+      prompt: detailedPromptForCodeGeneration,
       userApiKey: userApiKey,
     };
 
@@ -194,11 +195,11 @@ Ensure your entire output is a single JSON object matching the required output s
         let runtimeUrl = `${origin}/api/runtime/${slug}`;
         let command = "";
         
-        const formData = form.getValues();
+        const formData = form.getValues(); // This is the user's input from the form.
 
         if (['POST', 'PUT', 'PATCH'].includes(method)) {
-          // For POST/PUT/PATCH, the user_query in the body should be the detailed constructed prompt for endpoint generation
-          let bodyPayloadForRuntime: any = { user_query: constructedAiPromptForEndpointGen }; 
+          let bodyPayloadForRuntime: any = { user_query: formData.prompt }; // User's original, short prompt
+          
           if (formData.requestBodyExample && formData.requestBodyExample.trim() !== "") {
             try {
               const userExampleParsed = JSON.parse(formData.requestBodyExample.trim());
@@ -226,8 +227,7 @@ Ensure your entire output is a single JSON object matching the required output s
         setDisplayedRuntimeUrl('YOUR_APP_ORIGIN/api/runtime/... (will populate when endpoint is generated)');
     }
   // formData.prompt, formData.limit, constructedAiPromptForEndpointGen are used in effect
-  }, [generatedOutput, constructedAiPromptForEndpointGen, form.getValues('prompt'), form.getValues('limit'), form.getValues('requestBodyExample'), form]);
-
+  }, [generatedOutput, form]); // Removed constructedAiPromptForEndpointGen from deps as it's not used for runtime curl
 
   return (
     <Form {...form}>
@@ -387,7 +387,7 @@ Ensure your entire output is a single JSON object matching the required output s
                 </Card>
               )}
 
-              {generatedOutput.suggestedPath && ( // constructedAiPromptForEndpointGen removed as a direct dependency for rendering this block
+              {generatedOutput.suggestedPath && (
                 <Card className="mt-6 border-accent/50 bg-accent/5">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center text-accent">
@@ -395,8 +395,8 @@ Ensure your entire output is a single JSON object matching the required output s
                       Experimental: Live AI Runtime Endpoint
                     </CardTitle>
                     <CardDescription className="text-xs">
-                      Test fetching dynamic, AI-generated data based on your inputs using a special runtime endpoint. 
-                      For GET/DELETE, it uses the "Describe..." prompt from the form. For POST/PUT/PATCH, it uses the more detailed internal prompt.
+                      Test fetching dynamic, AI-generated data using this runtime endpoint. 
+                      It uses the concise prompt you provided in the "Describe..." field.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
@@ -409,7 +409,7 @@ Ensure your entire output is a single JSON object matching the required output s
                       <li>Make a {generatedOutput.httpMethod.toUpperCase()} request to the URL above.</li>
                       <li>You <strong>MUST</strong> include your Google AI API Key as a request header: <code className="text-xs bg-muted px-1 py-0.5 rounded">X-Goog-Api-Key: YOUR_API_KEY</code>.</li>
                       {['POST', 'PUT', 'PATCH'].includes(generatedOutput.httpMethod.toUpperCase()) ? (
-                        <li>For {generatedOutput.httpMethod.toUpperCase()} requests, include a JSON body. This body <strong>MUST</strong> contain a <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code> field with the detailed constructed prompt text (derived from all form inputs). If you provided an "Example Request Body" in the form, its content will also be included in the example `curl` command's body, merged with `user_query`.</li>
+                        <li>For {generatedOutput.httpMethod.toUpperCase()} requests, include a JSON body. This body <strong>MUST</strong> contain a <code className="text-xs bg-muted px-1 py-0.5 rounded">user_query</code> field with your original, concise prompt (from the "Describe..." form field). If you provided an "Example Request Body" in the form, its content will also be included in the example `curl` command's body, merged with this `user_query`.</li>
                       ) : (
                         <li>The <code className="text-xs bg-muted px-1 py-0.5 rounded">prompt</code> query parameter in the URL should be the original text from the "Describe the API endpoint's purpose" field. The optional <code className="text-xs bg-muted px-1 py-0.5 rounded">limit</code> parameter will also be included if you provided it.</li>
                       )}
@@ -418,7 +418,7 @@ Ensure your entire output is a single JSON object matching the required output s
                     <CodeBlock code={dynamicCurlCommand} language="bash" />
                      <p className="text-xs text-muted-foreground mt-1">
                       Note: Replace <code className="text-xs bg-muted px-1 py-0.5 rounded">YOUR_API_KEY</code> with your actual key.
-                      For POST/PUT/PATCH, the JSON body needs the `user_query` field (containing the detailed prompt constructed from all form fields) and any other example data.
+                      For POST/PUT/PATCH, the JSON body needs the `user_query` field (containing your short, original prompt) and any other example data fields.
                       For GET/DELETE, the `prompt` and optional `limit` are passed as URL query parameters.
                     </p>
                   </CardContent>
