@@ -8,9 +8,9 @@ import { Analytics } from "@vercel/analytics/react"
 
 
 export const metadata: Metadata = {
-  title: 'Gen-Endpoint: Free Public API Endpoints & AI API Generation Tools',
-  description: 'Discover free public API endpoints for testing and development. Gen-Endpoint also offers AI-powered tools to generate Next.js API handlers, JSON schemas, and sample data. Perfect for developers seeking test APIs or quick backend solutions.',
-  keywords: ['free public API', 'test API', 'sample API', 'public endpoints', 'API for developers', 'Next.js API generator', 'AI API tools', 'JSON schema generator', 'API development', 'backend tools', 'genkit', 'free api', 'public api'],
+  title: 'Gen-Endpoint: Free Public APIs, REST API Endpoints & AI Generation Tools',
+  description: 'Discover free public APIs and REST API endpoints for testing and development. Gen-Endpoint also offers AI-powered tools to generate Next.js API handlers, JSON schemas, and sample data. Perfect for developers seeking test APIs, mock APIs, or quick backend solutions and web services.',
+  keywords: ['free public API', 'test API', 'sample API', 'public endpoints', 'API for developers', 'Next.js API generator', 'AI API tools', 'JSON schema generator', 'API development', 'backend tools', 'genkit', 'free api', 'public api', 'restAPI', 'REST API', 'developer tools', 'mock API', 'JSON API', 'web services', 'AI powered API'],
 };
 
 export default function RootLayout({
