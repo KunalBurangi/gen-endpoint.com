@@ -35,7 +35,7 @@ jobs:
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}' # Automatically provided by GitHub
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' # Your service account key JSON
-          projectId: 'YOUR_FIREBASE_PROJECT_ID' # ** IMPORTANT: Replace with your Firebase project ID **
+          projectId: 'api-endpoint-explorer-i06cb' # ** IMPORTANT: Replace with your Firebase project ID **
           channelId: live # Deploy to the live channel
         env:
           FIREBASE_CLI_PREVIEWS: apphosting # Enable App Hosting features in Firebase CLI
