@@ -1,7 +1,8 @@
-import { type LucideIcon, Smile, Activity, Database, Zap, Users, ShoppingCart, Lock, PackageSearch, Upload, Search, Bell, BarChart3, FileText, MessageSquare, Webhook, Shield, MessageCircle, Clock, Link, QrCode, Smartphone, Download, ShoppingBag, Boxes } from 'lucide-react';
+
+import { type LucideIcon, Smile, Activity, Database, Zap, Users, ShoppingCart, Lock, PackageSearch, Upload, Search, Bell, BarChart3, FileText, MessageSquare, Webhook, Shield, MessageCircle, Clock, Link, QrCode, Smartphone, Download, ShoppingBag, Boxes, Edit3, FileDown, Trash2 } from 'lucide-react';
 
 export interface ApiEndpoint {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   path: string;
   description: string;
   exampleRequest?: string; // JSON string for body, or example query params
@@ -200,8 +201,8 @@ export const publicApis: ApiDefinition[] = [
   },
   {
     id: 'file-upload-api',
-    name: 'File Upload API',
-    description: 'Handle file uploads with validation, metadata extraction, and storage simulation.',
+    name: 'File Upload & Management API',
+    description: 'Handle file uploads, downloads, metadata, and bulk operations with validation.',
     category: 'Utilities',
     documentationUrl: '/apis/file-upload-api',
     Icon: Upload,
@@ -210,27 +211,53 @@ export const publicApis: ApiDefinition[] = [
         method: 'POST',
         path: '/api/upload',
         description: 'Upload single or multiple files with validation and metadata extraction.',
-        exampleRequest: 'FormData with files field containing one or more files',
-        exampleResponse: '{\n  "success": true,\n  "files": [\n    {\n      "id": "file_123",\n      "originalName": "document.pdf",\n      "filename": "file_123_document.pdf",\n      "size": 1024000,\n      "mimeType": "application/pdf",\n      "uploadedAt": "2024-08-16T10:00:00Z",\n      "url": "/api/files/file_123"\n    }\n  ]\n}'
+        exampleRequest: 'FormData with "files" field containing one or more files (e.g., document.pdf, image.jpg). Max 10MB per file.',
+        exampleResponse: '{\n  "success": true,\n  "files": [\n    {\n      "id": "file_abc123",\n      "originalName": "document.pdf",\n      "filename": "file_abc123_document.pdf",\n      "size": 1024000,\n      "mimeType": "application/pdf",\n      "uploadedAt": "2024-08-16T10:00:00Z",\n      "url": "/api/files/file_abc123",\n      "downloadUrl": "/api/files/file_abc123/download"\n    }\n  ],\n  "uploaded": 1,\n  "message": "All 1 file(s) uploaded successfully"\n}'
       },
       {
         method: 'GET',
         path: '/api/files',
         description: 'List uploaded files with metadata and pagination support.',
-        exampleRequest: '?page=1&limit=10&type=image',
-        exampleResponse: '{\n  "files": [\n    {\n      "id": "file_123",\n      "originalName": "photo.jpg",\n      "size": 2048000,\n      "mimeType": "image/jpeg",\n      "uploadedAt": "2024-08-16T10:00:00Z"\n    }\n  ],\n  "pagination": {"page": 1, "limit": 10, "total": 25}\n}'
+        exampleRequest: '?page=1&limit=10&type=image&search=profile&sortBy=size&sortOrder=desc',
+        exampleResponse: '{\n  "files": [\n    {\n      "id": "file_456",\n      "originalName": "profile-photo.jpg",\n      "size": 2048000,\n      "mimeType": "image/jpeg",\n      "uploadedAt": "2024-08-16T09:30:00Z",\n      "url": "/api/files/file_456",\n      "description": "Profile photo image",\n      "tags": ["image", "profile"]\n    }\n  ],\n  "pagination": {"page": 1, "limit": 10, "total": 1, "pages": 1, "hasNext": false, "hasPrev": false},\n  "statistics": {"totalFiles": 1, "totalSize": 2048000, "typeDistribution": {"image": 1}, "averageSize": 2048000}\n}'
       },
       {
         method: 'GET',
         path: '/api/files/{fileId}',
-        description: 'Get file metadata and download link by ID.',
-        exampleResponse: '{\n  "id": "file_123",\n  "originalName": "document.pdf",\n  "size": 1024000,\n  "mimeType": "application/pdf",\n  "downloadUrl": "/api/files/file_123/download",\n  "uploadedAt": "2024-08-16T10:00:00Z"\n}'
+        description: 'Get file metadata by ID. Replace {fileId} with an actual ID like `file_123`.',
+        exampleResponse: '{\n  "id": "file_123",\n  "originalName": "sample-document.pdf",\n  "filename": "file_123_sample-document.pdf",\n  "size": 1024000,\n  "mimeType": "application/pdf",\n  "uploadedAt": "2024-08-16T10:00:00Z",\n  "url": "/api/files/file_123",\n  "downloadUrl": "/api/files/file_123/download",\n  "description": "Sample PDF document for testing",\n  "tags": ["document", "sample"]\n}'
+      },
+      {
+        method: 'PUT',
+        path: '/api/files/{fileId}',
+        description: 'Update file metadata (description, tags). Replace {fileId} with an ID like `file_123`.',
+        exampleRequest: '{\n  "description": "Updated sample PDF document",\n  "tags": ["document", "sample", "updated"]\n}',
+        exampleResponse: '{\n  "id": "file_123",\n  "originalName": "sample-document.pdf",\n  "size": 1024000,\n  "mimeType": "application/pdf",\n  "description": "Updated sample PDF document",\n  "tags": ["document", "sample", "updated"],\n  "updatedAt": "2024-08-17T10:00:00Z"\n}'
       },
       {
         method: 'DELETE',
         path: '/api/files/{fileId}',
-        description: 'Delete uploaded file by ID.',
-        exampleResponse: '{"message": "File file_123 deleted successfully.", "timestamp": "2024-08-16T11:00:00Z"}'
+        description: 'Delete uploaded file by ID. Replace {fileId} with an actual ID like `file_abc`.',
+        exampleResponse: '{"message": "File file_abc deleted successfully.", "timestamp": "2024-08-16T11:00:00Z"}'
+      },
+      {
+        method: 'GET',
+        path: '/api/files/{fileId}/download',
+        description: 'Download the actual file content. Replace {fileId} with an ID like `file_123`.',
+        exampleResponse: 'File content of "sample-document.pdf" (actual binary data or text based on MIME type will be returned with appropriate headers).'
+      },
+      {
+        method: 'POST',
+        path: '/api/files/bulk',
+        description: 'Perform bulk operations like delete or tag on multiple files.',
+        exampleRequest: '{\n  "operation": "delete",\n  "fileIds": ["file_123", "file_456"]\n}',
+        exampleResponse: '{\n  "operation": "delete",\n  "totalFiles": 2,\n  "successful": 2,\n  "failed": 0,\n  "errors": [],\n  "message": "Bulk delete completed: 2 successful, 0 failed"\n}'
+      },
+      {
+        method: 'GET',
+        path: '/api/files/bulk',
+        description: 'Get information about available bulk operations and their parameters.',
+        exampleResponse: '{\n  "endpoint": "/api/files/bulk",\n  "method": "POST",\n  "supportedOperations": [\n    {"operation": "delete", "description": "Delete multiple files"},\n    {"operation": "tag", "description": "Add tags to multiple files"}\n  ]\n}'
       }
     ]
   },
@@ -373,28 +400,34 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/cart/{sessionId}',
-        description: 'Get cart contents for session with item details and totals.',
-        exampleResponse: '{\n  "sessionId": "sess_123",\n  "items": [\n    {\n      "id": "item_1",\n      "productId": "prod_123",\n      "name": "Wireless Headphones",\n      "price": 99.99,\n      "quantity": 2,\n      "subtotal": 199.98\n    }\n  ],\n  "totals": {"subtotal": 199.98, "tax": 16.00, "total": 215.98},\n  "updatedAt": "2024-08-16T12:00:00Z"\n}'
+        description: 'Get cart contents for session with item details and totals. Replace {sessionId} with an actual session ID (e.g., sess_123).',
+        exampleResponse: '{\n  "sessionId": "sess_123",\n  "items": [\n    {\n      "id": "item_1",\n      "productId": "prod_123",\n      "name": "Wireless Headphones",\n      "price": 99.99,\n      "quantity": 2,\n      "options": {"color": "black", "size": "standard"},\n      "imageUrl": "https://placehold.co/100x100.png",\n      "subtotal": 199.98,\n      "addedAt": "2024-08-16T12:00:00Z"\n    }\n  ],\n  "totals": {"subtotal": 199.98, "tax": 16.00, "shipping": 0.00, "discount": 0, "total": 215.98},\n  "createdAt": "2024-08-16T12:00:00Z",\n  "updatedAt": "2024-08-16T12:00:00Z",\n  "expiresAt": "2024-08-17T12:00:00Z"\n}'
       },
       {
         method: 'POST',
         path: '/api/cart/{sessionId}/items',
-        description: 'Add item to cart with quantity and options.',
-        exampleRequest: '{\n  "productId": "prod_456",\n  "quantity": 1,\n  "options": {"color": "blue", "size": "large"}\n}',
-        exampleResponse: '{\n  "success": true,\n  "item": {\n    "id": "item_2",\n    "productId": "prod_456",\n    "quantity": 1,\n    "addedAt": "2024-08-16T12:01:00Z"\n  },\n  "cartTotal": 315.97\n}'
+        description: 'Add an item to the cart. Replace {sessionId} with a session ID.',
+        exampleRequest: '{\n  "productId": "prod_456",\n  "quantity": 1,\n  "options": {"format": "paperback"}\n}',
+        exampleResponse: '{\n  "success": true,\n  "item": {\n    "id": "item_randomId",\n    "productId": "prod_456",\n    "name": "JavaScript Book",\n    "price": 29.99,\n    "quantity": 1,\n    "options": {"format": "paperback"},\n    "imageUrl": "https://placehold.co/100x100.png",\n    "subtotal": 29.99,\n    "addedAt": "2024-08-17T10:00:00Z"\n  },\n  "cartTotal": 245.97,\n  "itemCount": 3\n}'
+      },
+      {
+        method: 'GET',
+        path: '/api/cart/{sessionId}/items',
+        description: 'List all items in the specified cart. Replace {sessionId} with a session ID.',
+        exampleResponse: '{\n  "items": [\n    {\n      "id": "item_1",\n      "productId": "prod_123",\n      "name": "Wireless Headphones",\n      "price": 99.99,\n      "quantity": 2, \n      "options": {"color": "black"},\n      "subtotal": 199.98\n    }\n  ],\n  "itemCount": 2,\n  "totals": {"subtotal": 199.98, "tax": 16.00, "shipping": 0.00, "discount": 0, "total": 215.98}\n}'
       },
       {
         method: 'PUT',
-        path: '/api/cart/{sessionId}/items/{itemId}',
-        description: 'Update item quantity or options in cart.',
-        exampleRequest: '{\n  "quantity": 3\n}',
-        exampleResponse: '{\n  "success": true,\n  "item": {\n    "id": "item_1",\n    "quantity": 3,\n    "subtotal": 299.97\n  },\n  "cartTotal": 415.96\n}'
+        path: '/api/cart/{sessionId}',
+        description: 'Update cart metadata, e.g., apply a coupon code. Replace {sessionId} with a session ID.',
+        exampleRequest: '{\n  "couponCode": "SAVE10"\n}',
+        exampleResponse: '{\n  "sessionId": "sess_123",\n  "items": [...],\n  "totals": {"subtotal": 199.98, "tax": 16.00, "shipping": 0.00, "discount": 20.00, "total": 195.98},\n  "couponCode": "SAVE10",\n  "updatedAt": "2024-08-17T11:00:00Z"\n}'
       },
       {
         method: 'DELETE',
-        path: '/api/cart/{sessionId}/items/{itemId}',
-        description: 'Remove item from cart.',
-        exampleResponse: '{\n  "success": true,\n  "message": "Item removed from cart",\n  "cartTotal": 115.99\n}'
+        path: '/api/cart/{sessionId}',
+        description: 'Clear all items from the cart. Replace {sessionId} with a session ID.',
+        exampleResponse: '{\n  "message": "Cart cleared successfully",\n  "timestamp": "2024-08-17T11:05:00Z"\n}'
       }
     ]
   },
@@ -768,3 +801,5 @@ export const apiCategories: string[] = Array.from(new Set(publicApis.map(api => 
 export const getApiById = (id: string): ApiDefinition | undefined => {
   return publicApis.find(api => api.id === id);
 };
+
+    
