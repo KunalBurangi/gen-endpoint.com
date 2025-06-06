@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Test - Gen-Endpoint</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            background: #fafafa;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .progress {
+            display: none;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #007bff;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .file-list {
+            margin-top: 20px;
+        }
+        .file-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 0;
+            background: #f9f9f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .file-info {
+            flex-grow: 1;
+        }
+        .file-size {
+            color: #666;
+            font-size: 14px;
+        }
+        .test-buttons {
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        .endpoint-test {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Gen-Endpoint File Upload Test</h1>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>📁 Drag and drop files here or click to select</p>
+            <input type="file" id="fileInput" multiple accept="image/*,application/pdf,text/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip">
+            <br>
+            <button onclick="document.getElementById('fileInput').click()">Choose Files</button>
+        </div>
+
+        <div class="test-buttons">
+            <button onclick="uploadFiles()">Upload Selected Files</button>
+            <button onclick="listFiles()">List All Files</button>
+            <button onclick="getUploadInfo()">Get Upload Info</button>
+            <button onclick="clearResults()">Clear Results</button>
+        </div>
+
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p id="progressText">Uploading...</p>
+        </div>
+
+        <div id="results"></div>
+
+        <div class="endpoint-test">
+            <h3></h3>🧪 Test Other Endpoints</h3>
+            <div class="test-buttons">
+                <button onclick="testEndpoint('/api/files', 'GET')">GET /api/files</button>
+                <button onclick="testEndpoint('/api/files?type=image', 'GET')">GET /api/files?type=image</button>
+                <button onclick="testEndpoint('/api/files?limit=3', 'GET')">GET /api/files?limit=3</button>
+                <button onclick="testEndpoint('/api/upload', 'GET')">GET /api/upload (info)</button>
+                <button onclick="testFileDetails()">GET /api/files/{id}</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const results = document.getElementById('results');
+        const progress = document.getElementById('progress');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            fileInput.files = e.dataTransfer.files;
+            displaySelectedFiles();
+        });
+
+        fileInput.addEventListener('change', displaySelectedFiles);
+
+        function displaySelectedFiles() {
+            const files = fileInput.files;
+            if (files.length > 0) {
+                let html = '<div class="file-list"><h4>Selected Files:</h4>';
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    html += `
+                        <div class="file-item">
+                            <div class="file-info">
+                                <strong>${file.name}</strong>
+                                <div class="file-size">${formatFileSize(file.size)} • ${file.type}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                document.getElementById('uploadArea').innerHTML = html + 
+                    '<button onclick="document.getElementById(\'fileInput\').click()">Choose Different Files</button>';
+            }
+        }
+
+        async function uploadFiles() {
+            const files = fileInput.files;
+            if (files.length === 0) {
+                showResult('Please select files to upload', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+
+            showProgress(true);
+            
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                showProgress(false);
+
+                if (response.ok) {
+                    showResult(`
+                        <h4>✅ Upload Successful!</h4>
+                        <p>${data.message}</p>
+                        <p>Uploaded: ${data.uploaded} files</p>
+                        ${data.errors ? `<p>Errors: ${data.errors.length}</p>` : ''}
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `, 'success');
+                } else {
+                    showResult(`
+                        <h4>❌ Upload Failed</h4>
+                        <p>${data.error}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `, 'error');
+                }
+            } catch (error) {
+                showProgress(false);
+                showResult(`
+                    <h4>❌ Network Error</h4>
+                    <p>${error.message}</p>
+                `, 'error');
+            }
+        }
+
+        async function listFiles() {
+            try {
+                const response = await fetch('/api/files');
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(`
+                        <h4>📁 Files List</h4>
+                        <p>Total files: ${data.pagination.total}</p>
+                        <p>Page: ${data.pagination.page} of ${data.pagination.pages}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `, 'success');
+                } else {
+                    showResult(`
+                        <h4>❌ Failed to list files</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult(`
+                    <h4>❌ Network Error</h4>
+                    <p>${error.message}</p>
+                `, 'error');
+            }
+        }
+
+        async function getUploadInfo() {
+            try {
+                const response = await fetch('/api/upload');
+                const data = await response.json();
+
+                showResult(`
+                    <h4>ℹ️ Upload Endpoint Information</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `, 'success');
+            } catch (error) {
+                showResult(`
+                    <h4>❌ Network Error</h4>
+                    <p>${error.message}</p>
+                `, 'error');
+            }
+        }
+
+        async function testEndpoint(url, method = 'GET') {
+            try {
+                const response = await fetch(url, { method });
+                const data = await response.json();
+
+                showResult(`
+                    <h4>🔗 ${method} ${url}</h4>
+                    <p>Status: ${response.status} ${response.statusText}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `, response.ok ? 'success' : 'error');
+            } catch (error) {
+                showResult(`
+                    <h4>❌ ${method} ${url} - Network Error</h4>
+                    <p>${error.message}</p>
+                `, 'error');
+            }
+        }
+
+        async function testFileDetails() {
+            // Use a known file ID from the mock data
+            const fileId = 'file_123';
+            await testEndpoint(`/api/files/${fileId}`, 'GET');
+        }
+
+        function showProgress(show) {
+            progress.style.display = show ? 'block' : 'none';
+            if (show) {
+                let width = 0;
+                const interval = setInterval(() => {
+                    width += 10;
+                    progressFill.style.width = width + '%';
+                    if (width >= 100) {
+                        clearInterval(interval);
+                    }
+                }, 100);
+            } else {
+                progressFill.style.width = '0%';
+            }
+        }
+
+        function showResult(message, type) {
+            results.innerHTML = `<div class="results ${type}">${message}</div>`;
+            results.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearResults() {
+            results.innerHTML = '';
+            uploadArea.innerHTML = `
+                <p>📁 Drag and drop files here or click to select</p>
+                <input type="file" id="fileInput" multiple accept="image/*,application/pdf,text/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip">
+                <br>
+                <button onclick="document.getElementById('fileInput').click()">Choose Files</button>
+            `;
+            fileInput.addEventListener('change', displaySelectedFiles);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Initialize
+        displaySelectedFiles();
+    </script>
+</body>
+</html>

@@ -132,7 +132,13 @@ export default function ApiDetailPage({ params: paramsPromise }: ApiDetailPagePr
                             Example Response:
                           </h4>
                            <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-all p-2 bg-muted/50 rounded-md border">
-                            <code>{JSON.stringify(JSON.parse(endpoint.exampleResponse), null, 2)}</code>
+                            <code>{(() => {
+                              try {
+                                return JSON.stringify(JSON.parse(endpoint.exampleResponse), null, 2);
+                              } catch (error) {
+                                return endpoint.exampleResponse;
+                              }
+                            })()}</code>
                           </pre>
                         </div>
                       )}

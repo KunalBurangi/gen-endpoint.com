@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { publicApis, type ApiDefinition } from '@/data/apis';
 import { ApiCard } from '@/components/ApiCard';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, Upload } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -28,6 +28,12 @@ export default function HomePage() {
             <Link href="/generate">
               <Lightbulb className="mr-2 h-5 w-5" />
               Go to AI API Tools
+            </Link>
+          </Button>
+          <Button size="lg" variant="secondary" asChild>
+            <Link href="/upload-test">
+              <Upload className="mr-2 h-5 w-5" />
+              Test File Upload
             </Link>
           </Button>
         </div>
