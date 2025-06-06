@@ -1,5 +1,5 @@
 
-import { type LucideIcon, Smile, Activity, Database, Zap, Users, ShoppingCart, Lock, PackageSearch, Upload, Search, Bell, BarChart3, FileText, MessageSquare, Webhook, Shield, MessageCircle, Clock, Link, QrCode, Smartphone, Download, ShoppingBag, Boxes, Edit3, FileDown, Trash2 } from 'lucide-react';
+import { type LucideIcon, Smile, Activity, Database, Zap, Users, ShoppingCart, Lock, PackageSearch, Upload, Search, Bell, BarChart3, FileText, MessageSquare, Webhook, Shield, MessageCircle, Clock, Link, QrCode, Smartphone, Download, ShoppingBag, Boxes, Edit3, FileDown, Trash2, List, Tag } from 'lucide-react';
 
 export interface ApiEndpoint {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -308,23 +308,31 @@ export const publicApis: ApiDefinition[] = [
         exampleResponse: '{\n  "id": "notif_123",\n  "type": "email",\n  "status": "queued",\n  "scheduledAt": "2024-08-16T12:00:00Z",\n  "estimatedDelivery": "2024-08-16T12:01:00Z"\n}'
       },
       {
+        method: 'GET',
+        path: '/api/notifications/email',
+        description: 'Get email notification history.',
+        exampleRequest: '?status=delivered&limit=10',
+        exampleResponse: '{\n  "notifications": [\n    {\n      "id": "notif_123",\n      "status": "delivered",\n      "recipient": "user@example.com",\n      "subject": "Welcome!",\n      "deliveredAt": "2024-08-16T12:01:15Z"\n    }\n  ],\n  "pagination": {"page": 1, "limit": 10, "total": 5}\n}'
+      },
+      {
         method: 'POST',
         path: '/api/notifications/push',
         description: 'Send push notification to devices.',
         exampleRequest: '{\n  "deviceTokens": ["token1", "token2"],\n  "title": "New Message",\n  "body": "You have a new message from Alice",\n  "data": {"messageId": "msg_456", "type": "chat"}\n}',
         exampleResponse: '{\n  "id": "notif_124",\n  "type": "push",\n  "status": "sent",\n  "deliveredTo": 2,\n  "failedDeliveries": 0\n}'
       },
+       {
+        method: 'GET',
+        path: '/api/notifications/push',
+        description: 'Get push notification history and stats.',
+        exampleRequest: '?limit=10',
+        exampleResponse: '{\n  "notifications": [\n    {\n      "id": "notif_124",\n      "title": "New Message",\n      "status": "sent",\n      "deliveredTo": 2,\n      "createdAt": "2024-08-16T12:05:00Z"\n    }\n  ],\n  "stats": {"totalSent": 10, "totalDelivered": 8, "successRate": 80}\n}'
+      },
       {
         method: 'GET',
         path: '/api/notifications/templates',
         description: 'List available notification templates.',
         exampleResponse: '[\n  {\n    "id": "welcome",\n    "name": "Welcome Email",\n    "type": "email",\n    "variables": ["name", "verificationUrl"]\n  },\n  {\n    "id": "password_reset",\n    "name": "Password Reset",\n    "type": "email",\n    "variables": ["name", "resetUrl"]\n  }\n]'
-      },
-      {
-        method: 'GET',
-        path: '/api/notifications/{notificationId}',
-        description: 'Get notification status and delivery details.',
-        exampleResponse: '{\n  "id": "notif_123",\n  "type": "email",\n  "status": "delivered",\n  "sentAt": "2024-08-16T12:00:30Z",\n  "deliveredAt": "2024-08-16T12:01:15Z",\n  "recipient": "user@example.com"\n}'
       }
     ]
   },
@@ -345,47 +353,52 @@ export const publicApis: ApiDefinition[] = [
       },
       {
         method: 'GET',
+        path: '/api/analytics/track',
+        description: 'Get recent tracked events for debugging.',
+        exampleRequest: '?userId=usr_123&event=page_view&limit=10',
+        exampleResponse: '{\n  "events": [\n    {\n      "id": "evt_789",\n      "event": "page_view",\n      "userId": "usr_123",\n      "timestamp": "2024-08-16T12:00:00Z",\n      "properties": {"page": "/products"}\n    }\n  ],\n  "total": 50, "filtered": 10\n}'
+      },
+      {
+        method: 'GET',
         path: '/api/analytics/dashboard',
         description: 'Get dashboard metrics and KPIs for specified time range.',
         exampleRequest: '?period=7d&metrics=pageviews,users,conversions',
         exampleResponse: '{\n  "period": "7d",\n  "metrics": {\n    "pageviews": {"value": 15420, "change": "+12.5%"},\n    "uniqueUsers": {"value": 3254, "change": "+8.2%"},\n    "conversions": {"value": 89, "change": "-2.1%"}\n  },\n  "topPages": ["/products", "/home", "/about"]\n}'
-      },
-      {
-        method: 'GET',
-        path: '/api/analytics/reports/{reportType}',
-        description: 'Generate various analytics reports (traffic, conversion, user behavior).',
-        exampleRequest: 'Path: /api/analytics/reports/traffic?start=2024-08-01&end=2024-08-16',
-        exampleResponse: '{\n  "reportType": "traffic",\n  "period": {"start": "2024-08-01", "end": "2024-08-16"},\n  "data": [\n    {"date": "2024-08-01", "pageviews": 1250, "users": 423},\n    {"date": "2024-08-02", "pageviews": 1380, "users": 456}\n  ]\n}'
       }
     ]
   },
   {
     id: 'data-export-api',
-    name: 'Data Export/Import API',
-    description: 'Export data in various formats (CSV, JSON, Excel) and import from files with validation.',
+    name: 'Data Export API',
+    description: 'Export data in various formats (CSV, JSON, XML) with filtering and field selection.',
     category: 'Data',
     documentationUrl: '/apis/data-export-api',
-    Icon: Download,
+    Icon: FileDown,
     endpoints: [
       {
         method: 'POST',
         path: '/api/export/{format}',
-        description: 'Export data in CSV, JSON, or Excel format.',
+        description: 'Request data export in CSV, JSON, or XML format. Replace {format} with "csv", "json", or "xml".',
         exampleRequest: 'Path: /api/export/csv\nBody: {\n  "entity": "users",\n  "filters": {"role": "admin"},\n  "fields": ["name", "email", "createdAt"]\n}',
-        exampleResponse: '{\n  "jobId": "export_123",\n  "status": "processing",\n  "format": "csv",\n  "estimatedCompletion": "2024-08-16T12:05:00Z"\n}'
+        exampleResponse: '{\n  "jobId": "export_123",\n  "status": "processing",\n  "format": "csv",\n  "entity": "users",\n  "totalRecords": 150,\n  "estimatedCompletion": "2024-08-16T12:05:00Z",\n  "statusUrl": "/api/export/status/export_123"\n}'
       },
       {
-        method: 'POST',
-        path: '/api/import',
-        description: 'Import data from uploaded files with validation.',
-        exampleRequest: 'FormData with file field and optional mapping configuration',
-        exampleResponse: '{\n  "jobId": "import_456",\n  "status": "processing",\n  "totalRows": 1500,\n  "validRows": 1450,\n  "errors": [\n    {"row": 25, "error": "Invalid email format"},\n    {"row": 120, "error": "Required field missing"}\n  ]\n}'
+        method: 'GET',
+        path: '/api/export/{format}',
+        description: 'Get information about the specified export format. Replace {format} with "csv", "json", or "xml".',
+        exampleResponse: '{\n  "format": "csv",\n  "mimeType": "text/csv",\n  "description": "Comma-separated values format",\n  "supportedEntities": ["users", "products", "orders"]\n}'
       },
       {
         method: 'GET',
         path: '/api/export/status/{jobId}',
-        description: 'Check export/import job status and download link.',
-        exampleResponse: '{\n  "jobId": "export_123",\n  "status": "completed",\n  "downloadUrl": "/api/export/download/export_123",\n  "completedAt": "2024-08-16T12:04:30Z",\n  "fileSize": 2048000\n}'
+        description: 'Check export job status and get download link if completed. Replace {jobId} with an actual job ID like `export_123`.',
+        exampleResponse: '{\n  "id": "export_123",\n  "format": "csv",\n  "entity": "users",\n  "status": "completed",\n  "totalRecords": 150,\n  "createdAt": "2024-08-16T12:00:00Z",\n  "completedAt": "2024-08-16T12:04:30Z",\n  "downloadUrl": "/api/export/download/export_123",\n  "fileSize": 2048000,\n  "filename": "users-export-2024-08-16.csv",\n  "mimeType": "text/csv"\n}'
+      },
+      {
+        method: 'DELETE',
+        path: '/api/export/status/{jobId}',
+        description: 'Cancel an export job. Replace {jobId} with an actual job ID.',
+        exampleResponse: '{\n  "message": "Export job export_456 cancelled successfully",\n  "jobId": "export_456",\n  "status": "cancelled"\n}'
       }
     ]
   },
@@ -421,7 +434,7 @@ export const publicApis: ApiDefinition[] = [
         path: '/api/cart/{sessionId}',
         description: 'Update cart metadata, e.g., apply a coupon code. Replace {sessionId} with a session ID.',
         exampleRequest: '{\n  "couponCode": "SAVE10"\n}',
-        exampleResponse: '{\n  "sessionId": "sess_123",\n  "items": [...],\n  "totals": {"subtotal": 199.98, "tax": 16.00, "shipping": 0.00, "discount": 20.00, "total": 195.98},\n  "couponCode": "SAVE10",\n  "updatedAt": "2024-08-17T11:00:00Z"\n}'
+        exampleResponse: '{\n  "sessionId": "sess_123",\n  "items": [{"id": "item_1", "name": "Wireless Headphones", "quantity": 2, "subtotal": 199.98}],\n  "totals": {"subtotal": 199.98, "tax": 16.00, "shipping": 0.00, "discount": 20.00, "total": 195.98},\n  "couponCode": "SAVE10",\n  "updatedAt": "2024-08-17T11:00:00Z"\n}'
       },
       {
         method: 'DELETE',
@@ -498,12 +511,12 @@ export const publicApis: ApiDefinition[] = [
     description: 'Manage blog posts, categories, tags, content publishing, and SEO metadata.',
     category: 'Content',
     documentationUrl: '/apis/blog-api',
-    Icon: FileText,
+    Icon: Edit3,
     endpoints: [
       {
         method: 'GET',
         path: '/api/posts',
-        description: 'List blog posts with pagination, filtering, and search.',
+        description: 'List blog posts with pagination, filtering (status, category, search), and sorting.',
         exampleRequest: '?status=published&category=tech&page=1&limit=10&search=javascript',
         exampleResponse: '{\n  "posts": [\n    {\n      "id": "post_123",\n      "title": "Getting Started with JavaScript",\n      "slug": "getting-started-javascript",\n      "excerpt": "Learn the basics of JavaScript programming...",\n      "author": {"id": "usr_1", "name": "Alice Wonderland"},\n      "publishedAt": "2024-08-15T10:00:00Z",\n      "readTime": "5 min"\n    }\n  ],\n  "pagination": {"page": 1, "limit": 10, "total": 45}\n}'
       },
@@ -517,13 +530,14 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/posts/{slug}',
-        description: 'Get single post by slug with full content.',
+        description: 'Get single post by slug with full content. Replace {slug} with an actual post slug like "getting-started-javascript".',
         exampleResponse: '{\n  "id": "post_123",\n  "title": "Getting Started with JavaScript",\n  "content": "# Getting Started with JavaScript - A versatile programming language used for web development.",\n  "author": {"id": "usr_1", "name": "Alice Wonderland"},\n  "publishedAt": "2024-08-15T10:00:00Z",\n  "views": 1250,\n  "likes": 89\n}'
       },
       {
         method: 'GET',
         path: '/api/categories',
         description: 'List post categories and tags with post counts.',
+        Icon: Tag,
         exampleResponse: '{\n  "categories": [\n    {"id": "cat_1", "name": "Technology", "slug": "tech", "postCount": 25},\n    {"id": "cat_2", "name": "Design", "slug": "design", "postCount": 18}\n  ],\n  "tags": [\n    {"name": "javascript", "count": 15},\n    {"name": "react", "count": 12}\n  ]\n}'
       }
     ]
