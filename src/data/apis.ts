@@ -1,5 +1,5 @@
 
-import { type LucideIcon, Smile, Activity, Database, Zap, Users, ShoppingCart, Lock, PackageSearch, Upload, Search, Bell, BarChart3, FileText, MessageSquare, Webhook, Shield, MessageCircle, Clock, Link, QrCode, Smartphone, Download, ShoppingBag, Boxes, Edit3, FileDown, Trash2, List, Tag } from 'lucide-react';
+import { type LucideIcon, Smile, Activity, Database, Zap, Users, ShoppingCart, Lock, PackageSearch, Upload, Search, Bell, BarChart3, FileText, MessageSquare, Webhook, Shield, MessageCircle, Clock, Link as LinkIcon, QrCode, Smartphone, Download, ShoppingBag, Boxes, Edit3, FileDown, Trash2, List, Tag } from 'lucide-react';
 
 export interface ApiEndpoint {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -462,7 +462,7 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'POST',
         path: '/api/payments/{paymentId}/refund',
-        description: 'Process full or partial refund for payment.',
+        description: 'Process full or partial refund for payment. Replace {paymentId} with an actual payment ID.',
         exampleRequest: '{\n  "amount": 49.99,\n  "reason": "customer_request",\n  "refundId": "ref_123"\n}',
         exampleResponse: '{\n  "refundId": "ref_123",\n  "status": "processing",\n  "amount": 49.99,\n  "originalPayment": "pay_789",\n  "estimatedCompletion": "2024-08-19T12:00:00Z"\n}'
       },
@@ -486,7 +486,7 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/inventory/{productId}',
-        description: 'Get current stock levels and availability across warehouses.',
+        description: 'Get current stock levels and availability across warehouses. Replace {productId} with an actual product ID.',
         exampleResponse: '{\n  "productId": "prod_123",\n  "totalStock": 150,\n  "reserved": 25,\n  "available": 125,\n  "warehouses": [\n    {"id": "wh_1", "location": "NYC", "stock": 75},\n    {"id": "wh_2", "location": "LA", "stock": 75}\n  ],\n  "lowStockThreshold": 20\n}'
       },
       {
@@ -537,7 +537,6 @@ export const publicApis: ApiDefinition[] = [
         method: 'GET',
         path: '/api/categories',
         description: 'List post categories and tags with post counts.',
-        Icon: Tag,
         exampleResponse: '{\n  "categories": [\n    {"id": "cat_1", "name": "Technology", "slug": "tech", "postCount": 25},\n    {"id": "cat_2", "name": "Design", "slug": "design", "postCount": 18}\n  ],\n  "tags": [\n    {"name": "javascript", "count": 15},\n    {"name": "react", "count": 12}\n  ]\n}'
       }
     ]
@@ -560,14 +559,14 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/comments/{resourceId}',
-        description: 'Get comments for resource with threading and pagination.',
+        description: 'Get comments for resource with threading and pagination. Replace {resourceId} with an actual ID.',
         exampleRequest: '?resourceType=post&sort=newest&page=1&limit=20',
         exampleResponse: '{\n  "comments": [\n    {\n      "id": "comment_456",\n      "content": "Great article!",\n      "author": {"name": "Bob Builder", "avatar": "https://placehold.co/40x40.png"},\n      "rating": 5,\n      "replies": [],\n      "createdAt": "2024-08-16T12:00:00Z"\n    }\n  ],\n  "summary": {"total": 45, "averageRating": 4.2}\n}'
       },
       {
         method: 'PUT',
         path: '/api/comments/{commentId}/moderate',
-        description: 'Moderate comment - approve, reject, or flag.',
+        description: 'Moderate comment - approve, reject, or flag. Replace {commentId} with an actual ID.',
         exampleRequest: '{\n  "action": "approve",\n  "moderatorNote": "Content appropriate"\n}',
         exampleResponse: '{\n  "id": "comment_456",\n  "status": "approved",\n  "moderatedAt": "2024-08-16T12:05:00Z",\n  "moderatedBy": "usr_1"\n}'
       }
@@ -591,7 +590,7 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'POST',
         path: '/api/webhooks/{webhookId}/test',
-        description: 'Test webhook delivery with sample payload.',
+        description: 'Test webhook delivery with sample payload. Replace {webhookId} with an actual ID.',
         exampleRequest: '{\n  "event": "order.created",\n  "testPayload": {\n    "orderId": "order_123",\n    "amount": 99.99\n  }\n}',
         exampleResponse: '{\n  "testId": "test_456",\n  "status": "success",\n  "responseCode": 200,\n  "responseTime": 250,\n  "deliveredAt": "2024-08-16T12:01:00Z"\n}'
       },
@@ -656,14 +655,14 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/chat/rooms/{roomId}/messages',
-        description: 'Get message history for room with pagination.',
+        description: 'Get message history for room with pagination. Replace {roomId} with an actual ID.',
         exampleRequest: '?page=1&limit=50&before=2024-08-16T12:00:00Z',
         exampleResponse: '{\n  "messages": [\n    {\n      "id": "msg_123",\n      "content": "Hello everyone!",\n      "author": {"id": "usr_1", "name": "Alice", "avatar": "https://placehold.co/40x40.png"},\n      "timestamp": "2024-08-16T11:58:00Z",\n      "type": "text"\n    }\n  ],\n  "pagination": {"page": 1, "limit": 50, "hasMore": true}\n}'
       },
       {
         method: 'POST',
         path: '/api/chat/rooms/{roomId}/messages',
-        description: 'Send message to chat room.',
+        description: 'Send message to chat room. Replace {roomId} with an actual ID.',
         exampleRequest: '{\n  "content": "How is everyone doing?",\n  "type": "text",\n  "replyTo": null\n}',
         exampleResponse: '{\n  "id": "msg_124",\n  "content": "How is everyone doing?",\n  "author": {"id": "usr_2", "name": "Bob"},\n  "timestamp": "2024-08-16T12:00:00Z",\n  "roomId": "room_1"\n}'
       }
@@ -687,7 +686,7 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/jobs/{jobId}',
-        description: 'Get job status, progress, and results.',
+        description: 'Get job status, progress, and results. Replace {jobId} with an actual ID.',
         exampleResponse: '{\n  "id": "job_789",\n  "type": "data_export",\n  "status": "completed",\n  "progress": 100,\n  "startedAt": "2024-08-16T12:03:00Z",\n  "completedAt": "2024-08-16T12:08:00Z",\n  "result": {\n    "downloadUrl": "/api/downloads/export_789.csv",\n    "recordsProcessed": 1500\n  }\n}'
       },
       {
@@ -700,7 +699,7 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'DELETE',
         path: '/api/jobs/{jobId}',
-        description: 'Cancel queued or running job.',
+        description: 'Cancel queued or running job. Replace {jobId} with an actual ID.',
         exampleResponse: '{\n  "id": "job_791",\n  "status": "cancelled",\n  "cancelledAt": "2024-08-16T12:15:00Z",\n  "reason": "user_requested"\n}'
       }
     ]
@@ -711,7 +710,7 @@ export const publicApis: ApiDefinition[] = [
     description: 'Create and manage shortened URLs with click tracking, expiration, and custom aliases.',
     category: 'Utilities',
     documentationUrl: '/apis/url-shortener-api',
-    Icon: Link,
+    Icon: LinkIcon,
     endpoints: [
       {
         method: 'POST',
@@ -723,7 +722,7 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/stats/{shortCode}',
-        description: 'Get click statistics and analytics for shortened URL.',
+        description: 'Get click statistics and analytics for shortened URL. Replace {shortCode} with an actual code.',
         exampleResponse: '{\n  "shortCode": "my-link",\n  "originalUrl": "https://www.example.com/very/long/path/to/content",\n  "totalClicks": 1250,\n  "uniqueClicks": 892,\n  "clicksByDate": [\n    {"date": "2024-08-15", "clicks": 45},\n    {"date": "2024-08-16", "clicks": 67}\n  ],\n  "topReferrers": ["google.com", "twitter.com", "facebook.com"],\n  "countries": [{"code": "US", "name": "United States", "clicks": 678}]\n}'
       },
       {
@@ -736,7 +735,7 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'DELETE',
         path: '/api/links/{linkId}',
-        description: 'Delete shortened URL and disable access.',
+        description: 'Delete shortened URL and disable access. Replace {linkId} with an actual ID.',
         exampleResponse: '{\n  "message": "Link link_123 deleted successfully",\n  "deletedAt": "2024-08-16T12:30:00Z"\n}'
       }
     ]
@@ -754,13 +753,37 @@ export const publicApis: ApiDefinition[] = [
         path: '/api/qr/generate',
         description: 'Generate QR code image with customizable options.',
         exampleRequest: '{\n  "data": "https://www.example.com",\n  "size": 256,\n  "format": "png",\n  "errorCorrection": "M",\n  "foregroundColor": "#000000",\n  "backgroundColor": "#FFFFFF",\n  "margin": 4\n}',
-        exampleResponse: '{\n  "id": "qr_456",\n  "imageUrl": "/api/qr/qr_456/image.png",\n  "data": "https://www.example.com",\n  "size": 256,\n  "format": "png",\n  "createdAt": "2024-08-16T12:00:00Z"\n}'
+        exampleResponse: '{\n  "id": "qr_456",\n  "imageUrl": "/api/qr/qr_456/image.png",\n  "data": "https://www.example.com",\n  "size": 256,\n  "format": "png",\n  "createdAt": "2024-08-16T12:00:00Z",\n  "downloadUrls": {\n    "png": "/api/qr/qr_456/download.png",\n    "svg": "/api/qr/qr_456/download.svg",\n    "pdf": "/api/qr/qr_456/download.pdf"\n   }\n}'
       },
       {
         method: 'GET',
         path: '/api/qr/{qrId}',
-        description: 'Get QR code metadata and download links.',
+        description: 'Get QR code metadata and download links. Replace {qrId} with an actual ID like `qr_456`.',
         exampleResponse: '{\n  "id": "qr_456",\n  "data": "https://www.example.com",\n  "imageUrl": "/api/qr/qr_456/image.png",\n  "downloadUrls": {\n    "png": "/api/qr/qr_456/download.png",\n    "svg": "/api/qr/qr_456/download.svg",\n    "pdf": "/api/qr/qr_456/download.pdf"\n  },\n  "scanCount": 45,\n  "createdAt": "2024-08-16T12:00:00Z"\n}'
+      },
+      {
+        method: 'GET',
+        path: '/api/qr/{qrId}/image.png',
+        description: 'Retrieve the QR code as a PNG image. Replace {qrId} with an actual ID like `qr_456`.',
+        exampleResponse: '(Binary PNG image data)'
+      },
+      {
+        method: 'GET',
+        path: '/api/qr/{qrId}/download.png',
+        description: 'Download the QR code as a PNG file. Replace {qrId} with an actual ID like `qr_456`.',
+        exampleResponse: '(File download of PNG image)'
+      },
+      {
+        method: 'GET',
+        path: '/api/qr/{qrId}/download.svg',
+        description: 'Download the QR code as an SVG file. Replace {qrId} with an actual ID like `qr_456`.',
+        exampleResponse: '(File download of SVG image)'
+      },
+      {
+        method: 'GET',
+        path: '/api/qr/{qrId}/download.pdf',
+        description: 'Download the QR code as a PDF file. Replace {qrId} with an actual ID like `qr_456`.',
+        exampleResponse: '(File download of PDF document)'
       },
       {
         method: 'POST',
@@ -789,7 +812,7 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'PUT',
         path: '/api/devices/{deviceId}/token',
-        description: 'Update push notification token for device.',
+        description: 'Update push notification token for device. Replace {deviceId} with an actual ID.',
         exampleRequest: '{\n  "pushToken": "new_apns_token_456",\n  "tokenType": "apns"\n}',
         exampleResponse: '{\n  "deviceId": "device_abc123",\n  "pushToken": "new_apns_token_456",\n  "updatedAt": "2024-08-16T12:05:00Z",\n  "status": "token_updated"\n}'
       },
@@ -802,7 +825,7 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'PUT',
         path: '/api/devices/{deviceId}/preferences',
-        description: 'Update notification preferences for device.',
+        description: 'Update notification preferences for device. Replace {deviceId} with an actual ID.',
         exampleRequest: '{\n  "notifications": {\n    "push": true,\n    "email": false,\n    "marketing": false\n  },\n  "quietHours": {\n    "enabled": true,\n    "start": "22:00",\n    "end": "08:00",\n    "timezone": "America/New_York"\n  }\n}',
         exampleResponse: '{\n  "deviceId": "device_abc123",\n  "preferences": {\n    "notifications": {\n      "push": true,\n      "email": false,\n      "marketing": false\n    },\n    "quietHours": {\n      "enabled": true,\n      "start": "22:00",\n      "end": "08:00",\n      "timezone": "America/New_York"\n    }\n  },\n  "updatedAt": "2024-08-16T12:10:00Z"\n}'
       }
