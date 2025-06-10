@@ -5,3 +5,4 @@
 
 # Gen-Endpoint
 To get started, take a look at src/app/page.tsx.
+v2
