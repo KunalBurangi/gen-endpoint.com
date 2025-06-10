@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { createExportJob, updateJob, ExportJob } from '../../../../lib/data/exportJobs';
 
-// Mock data stores
+// Mock data stores for entities to be exported
 const users = [
   { id: 'usr_1', name: 'Alice Wonderland', email: 'alice@example.com', role: 'admin', createdAt: '2024-01-10T10:00:00Z' },
   { id: 'usr_2', name: 'Bob Builder', email: 'bob@example.com', role: 'editor', createdAt: '2024-01-11T11:00:00Z' },
@@ -18,16 +19,10 @@ const orders = [
   { id: 'ord_2', userId: 'usr_2', total: 45.98, status: 'pending', createdAt: '2024-08-16T11:00:00Z' }
 ];
 
-let exportJobs: any[] = [];
-let jobCounter = 1;
-
 interface Params {
   format: string;
 }
-
-function generateJobId(): string {
-  return `export_${jobCounter++}`;
-}
+// Note: generateJobId is now part of createExportJob in lib/data/exportJobs.ts
 
 function getDataByEntity(entity: string): any[] {
   switch (entity.toLowerCase()) {
@@ -148,50 +143,45 @@ export async function POST(request: NextRequest, { params }: { params: Params })
     // Select specific fields
     data = selectFields(data, fields);
 
-    // Create export job
-    const jobId = generateJobId();
-    const estimatedCompletion = new Date(Date.now() + 5000); // 5 seconds from now
-    
-    const exportJob = {
-      id: jobId,
-      format: format.toLowerCase(),
+    const jobDetails: Omit<ExportJob, 'id' | 'status' | 'createdAt' | 'updatedAt' | 'progress'> = {
+      format: format.toLowerCase() as 'csv' | 'json' | 'xml',
       entity,
-      status: 'processing',
-      totalRecords: data.length,
-      createdAt: new Date().toISOString(),
-      estimatedCompletion: estimatedCompletion.toISOString(),
+      totalRecords: dataToExport.length,
       filters,
-      fields
+      fields,
+      // estimatedCompletion will be set after creation
     };
 
-    exportJobs.push(exportJob);
+    const newJob = createExportJob(jobDetails);
+    const estimatedCompletionTime = new Date(Date.now() + 5000); // 5 seconds from now
+
+    updateJob(newJob.id, {
+      status: 'processing',
+      estimatedCompletion: estimatedCompletionTime.toISOString()
+    });
 
     // Simulate async processing
     setTimeout(() => {
-      const jobIndex = exportJobs.findIndex(j => j.id === jobId);
-      if (jobIndex >= 0) {
-        const { content, mimeType, filename } = formatData(data, format);
-        
-        exportJobs[jobIndex] = {
-          ...exportJobs[jobIndex],
-          status: 'completed',
-          completedAt: new Date().toISOString(),
-          downloadUrl: `/api/export/download/${jobId}`,
-          fileSize: Buffer.byteLength(content, 'utf8'),
-          filename,
-          mimeType
-        };
-      }
-    }, 2000);
+      const { content, mimeType, filename } = formatData(dataToExport, format);
+      updateJob(newJob.id, {
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+        downloadUrl: `/api/export/download/${newJob.id}`, // Placeholder, actual download not implemented
+        fileSize: Buffer.byteLength(content, 'utf8'),
+        filename,
+        mimeType,
+        progress: 100,
+      });
+    }, 2000); // Simulate 2 seconds processing time
 
     return NextResponse.json({
-      jobId,
-      status: 'processing',
-      format: format.toLowerCase(),
-      entity,
-      totalRecords: data.length,
-      estimatedCompletion: exportJob.estimatedCompletion,
-      statusUrl: `/api/export/status/${jobId}`
+      jobId: newJob.id,
+      status: 'processing', // Initial status after creation and immediate update
+      format: newJob.format,
+      entity: newJob.entity,
+      totalRecords: newJob.totalRecords,
+      estimatedCompletion: estimatedCompletionTime.toISOString(),
+      statusUrl: `/api/export/status/${newJob.id}`
     }, { status: 201 });
 
   } catch (error) {

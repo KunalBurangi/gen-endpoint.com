@@ -1,70 +1,14 @@
 import { type NextRequest, NextResponse } from 'next/server';
-
-// Mock cart storage - shared with parent cart endpoint
-let carts: { [sessionId: string]: any } = {
-  'sess_123': {
-    sessionId: 'sess_123',
-    items: [
-      {
-        id: 'item_1',
-        productId: 'prod_123',
-        name: 'Wireless Headphones',
-        price: 99.99,
-        quantity: 2,
-        options: { color: 'black', size: 'standard' },
-        imageUrl: 'https://placehold.co/100x100.png',
-        subtotal: 199.98,
-        addedAt: '2024-08-16T12:00:00Z'
-      }
-    ],
-    totals: { subtotal: 199.98, tax: 16.00, shipping: 0, discount: 0, total: 215.98 },
-    createdAt: '2024-08-16T12:00:00Z',
-    updatedAt: '2024-08-16T12:00:00Z',
-    expiresAt: '2024-08-17T12:00:00Z'
-  }
-};
-
-// Mock product data
-const products: { [id: string]: any } = {
-  'prod_123': { id: 'prod_123', name: 'Wireless Headphones', price: 99.99, inStock: true, imageUrl: 'https://placehold.co/100x100.png' },
-  'prod_456': { id: 'prod_456', name: 'JavaScript Book', price: 29.99, inStock: true, imageUrl: 'https://placehold.co/100x100.png' },
-  'prod_789': { id: 'prod_789', name: 'Mechanical Keyboard', price: 159.99, inStock: false, imageUrl: 'https://placehold.co/100x100.png' }
-};
+import {
+  getCart,
+  addItemToCart as addItem,
+  updateItemInCart as updateItem,
+  removeItemFromCart as removeItem,
+  Cart
+} from '../../../../../lib/data/carts';
 
 interface Params {
   sessionId: string;
-}
-
-function calculateTotals(items: any[]): any {
-  const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
-  const tax = subtotal * 0.08;
-  const shipping = subtotal > 50 ? 0 : 9.99;
-  const total = subtotal + tax + shipping;
-
-  return {
-    subtotal: Math.round(subtotal * 100) / 100,
-    tax: Math.round(tax * 100) / 100,
-    shipping: Math.round(shipping * 100) / 100,
-    discount: 0,
-    total: Math.round(total * 100) / 100
-  };
-}
-
-function generateItemId(): string {
-  return `item_${Math.random().toString(36).substring(2, 9)}`;
-}
-
-function initializeCart(sessionId: string): any {
-  const newCart = {
-    sessionId,
-    items: [],
-    totals: { subtotal: 0, tax: 0, shipping: 0, discount: 0, total: 0 },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-  };
-  carts[sessionId] = newCart;
-  return newCart;
 }
 
 // POST /api/cart/{sessionId}/items - Add item to cart
@@ -76,95 +20,36 @@ export async function POST(request: NextRequest, { params }: { params: Params })
     const { productId, quantity = 1, options = {} } = body;
 
     if (!productId) {
-      return NextResponse.json(
-        { error: 'Product ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
+    }
+    if (quantity <= 0 || quantity > 10) { // Basic quantity validation
+        return NextResponse.json({ error: 'Quantity must be between 1 and 10' }, { status: 400 });
     }
 
-    const product = products[productId];
-    if (!product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
-    }
+    const updatedCart = addItem(sessionId, productId, quantity, options);
 
-    if (!product.inStock) {
-      return NextResponse.json(
-        { error: 'Product is out of stock' },
-        { status: 400 }
-      );
+    if (!updatedCart) {
+      // This could happen if product is not found by addItem
+      return NextResponse.json({ error: 'Product not found or could not be added' }, { status: 404 });
     }
-
-    if (quantity <= 0 || quantity > 10) {
-      return NextResponse.json(
-        { error: 'Quantity must be between 1 and 10' },
-        { status: 400 }
-      );
-    }
-
-    // Initialize cart if it doesn't exist
-    if (!carts[sessionId]) {
-      initializeCart(sessionId);
-    }
-
-    const cart = carts[sessionId];
     
-    // Check if item already exists in cart
-    const existingItemIndex = cart.items.findIndex((item: any) => 
-      item.productId === productId && 
-      JSON.stringify(item.options) === JSON.stringify(options)
-    );
-
-    if (existingItemIndex >= 0) {
-      // Update existing item quantity
-      const existingItem = cart.items[existingItemIndex];
-      const newQuantity = existingItem.quantity + quantity;
-      
-      if (newQuantity > 10) {
-        return NextResponse.json(
-          { error: 'Cannot add more than 10 of the same item' },
-          { status: 400 }
-        );
-      }
-
-      existingItem.quantity = newQuantity;
-      existingItem.subtotal = Math.round(existingItem.price * newQuantity * 100) / 100;
-    } else {
-      // Add new item to cart
-      const newItem = {
-        id: generateItemId(),
-        productId,
-        name: product.name,
-        price: product.price,
-        quantity,
-        options,
-        imageUrl: product.imageUrl,
-        subtotal: Math.round(product.price * quantity * 100) / 100,
-        addedAt: new Date().toISOString()
-      };
-      cart.items.push(newItem);
-    }
-
-    // Recalculate totals
-    cart.totals = calculateTotals(cart.items);
-    cart.updatedAt = new Date().toISOString();
-
-    const addedItem = existingItemIndex >= 0 ? cart.items[existingItemIndex] : cart.items[cart.items.length - 1];
+    // Find the item that was just added/updated to return it
+    // This assumes options are simple enough for JSON.stringify comparison or that addItemToCart ensures uniqueness correctly
+    const addedOrUpdatedItem = updatedCart.items.find(
+        item => item.productId === productId && JSON.stringify(item.options) === JSON.stringify(options)
+    ) || updatedCart.items[updatedCart.items.length -1]; // Fallback to last if specific not found
 
     return NextResponse.json({
       success: true,
-      item: addedItem,
-      cartTotal: cart.totals.total,
-      itemCount: cart.items.reduce((sum: number, item: any) => sum + item.quantity, 0)
+      item: addedOrUpdatedItem, // Return the specific item added or updated
+      cart: updatedCart // Return the whole updated cart
     }, { status: 201 });
 
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Invalid request body' },
-      { status: 400 }
-    );
+    if (error instanceof Error) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Invalid request body or error adding item' }, { status: 400 });
   }
 }
 
@@ -172,19 +57,68 @@ export async function POST(request: NextRequest, { params }: { params: Params })
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   const { sessionId } = params;
   
-  const cart = carts[sessionId];
+  const cart = getCart(sessionId); // getCart ensures a cart always exists (new or existing)
   
-  if (!cart) {
-    return NextResponse.json({
-      items: [],
-      itemCount: 0,
-      total: 0
-    });
-  }
-
   return NextResponse.json({
     items: cart.items,
     itemCount: cart.items.reduce((sum: number, item: any) => sum + item.quantity, 0),
-    totals: cart.totals
+    totals: { // Reconstruct totals object as per original response structure
+        subtotal: cart.subtotal,
+        tax: cart.tax,
+        shipping: cart.shipping,
+        discount: cart.discount,
+        total: cart.total
+    }
   });
+}
+
+// PUT /api/cart/{sessionId}/items - Update item quantity in cart
+export async function PUT(request: NextRequest, { params }: { params: Params }) {
+  const { sessionId } = params;
+  try {
+    const body = await request.json();
+    const { itemId, quantity } = body;
+
+    if (!itemId || quantity === undefined) {
+      return NextResponse.json({ error: 'Item ID and quantity are required' }, { status: 400 });
+    }
+
+    if (quantity < 0 || quantity > 10) { // Allow 0 to remove, or up to 10
+        return NextResponse.json({ error: 'Quantity must be between 0 and 10 (0 to remove)' }, { status: 400 });
+    }
+
+    const updatedCart = updateItem(sessionId, itemId, quantity);
+
+    if (!updatedCart) {
+      return NextResponse.json({ error: 'Item not found in cart or update failed' }, { status: 404 });
+    }
+    return NextResponse.json(updatedCart);
+  } catch (error) {
+     if (error instanceof Error) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Invalid request body or error updating item' }, { status: 400 });
+  }
+}
+
+// DELETE /api/cart/{sessionId}/items - Remove item from cart
+export async function DELETE(request: NextRequest, { params }: { params: Params }) {
+  const { sessionId } = params;
+  try {
+    const body = await request.json();
+    const { itemId } = body;
+
+    if (!itemId) {
+      return NextResponse.json({ error: 'Item ID is required' }, { status: 400 });
+    }
+
+    const updatedCart = removeItem(sessionId, itemId);
+
+    if (!updatedCart) {
+      return NextResponse.json({ error: 'Item not found in cart or remove failed' }, { status: 404 });
+    }
+    return NextResponse.json(updatedCart);
+  } catch (error) {
+    return NextResponse.json({ error: 'Invalid request body or error removing item' }, { status: 400 });
+  }
 }

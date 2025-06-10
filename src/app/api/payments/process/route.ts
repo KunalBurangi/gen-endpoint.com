@@ -1,28 +1,45 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
+import { createPayment, PaymentMethodDetails } from '../../../../lib/data/payments';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
     // Basic validation
-    if (!body.amount || !body.currency || !body.paymentMethod) {
-      return NextResponse.json({ error: "Missing required payment fields: amount, currency, paymentMethod" }, { status: 400 });
+    if (!body.amount || !body.currency || !body.paymentMethod || !body.orderId) {
+      return NextResponse.json({
+        error: "Missing required payment fields: orderId, amount, currency, paymentMethod"
+      }, { status: 400 });
     }
 
-    // Mock processing
-    const paymentId = `pay_${Math.random().toString(36).substring(2, 9)}`;
-    const transactionId = `txn_${Math.random().toString(36).substring(2, 9)}`;
+    const { amount, currency, paymentMethod, orderId, customerId } = body;
 
+    // Type assertion for paymentMethod if needed, or ensure it matches PaymentMethodDetails
+    const paymentDetails = {
+      orderId,
+      customerId, // optional
+      amount,
+      currency,
+      paymentMethod: paymentMethod as PaymentMethodDetails,
+      // Other fields like 'description' could be added if part of your model
+    };
+
+    const newPayment = createPayment(paymentDetails);
+
+    // The payment is initially pending; its status will be updated asynchronously by createPayment's setTimeout.
+    // We return the initial state of the payment.
     return NextResponse.json({
-      paymentId,
-      status: "succeeded",
-      amount: body.amount,
-      currency: body.currency,
-      transactionId,
-      processedAt: new Date().toISOString()
-    });
+      paymentId: newPayment.id, // Use the ID from the created payment
+      status: newPayment.status, // Will be 'pending' initially
+      amount: newPayment.amount,
+      currency: newPayment.currency,
+      orderId: newPayment.orderId,
+      createdAt: newPayment.createdAt,
+      message: "Payment processing initiated."
+    }, { status: 202 }); // 202 Accepted for async processing
+
   } catch (error) {
-    // Catching potential JSON parsing errors or other issues
     let errorMessage = "Invalid request body or processing error.";
     if (error instanceof Error) {
       errorMessage = error.message;

@@ -1,13 +1,6 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
-
-// Mock data store (should ideally be shared with /api/users/route.ts or use a proper DB)
-// For simplicity, we'll redefine it here. In a real app, use a service or database.
-let users = [
-  {id: "usr_1", name: "Alice Wonderland", email: "alice@example.com", role: "admin", createdAt: "2024-01-10T10:00:00Z", profile: {"bio": "Curiouser and curiouser!", "avatarUrl": "https://placehold.co/100x100.png"}},
-  {id: "usr_2", name: "Bob The Builder", email: "bob@example.com", role: "editor", createdAt: "2024-01-11T11:00:00Z", profile: {"bio": "Can we fix it?", "avatarUrl": "https://placehold.co/100x100.png"}},
-];
-
+import { getUserById, updateUser, deleteUser, User } from '../../../../lib/data/users';
 
 interface Params {
   userId: string;
@@ -16,7 +9,7 @@ interface Params {
 // GET /api/users/{userId} - Retrieve a specific user
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   const { userId } = params;
-  const user = users.find(u => u.id === userId);
+  const user = getUserById(userId);
   if (user) {
     return NextResponse.json(user);
   }
@@ -27,18 +20,18 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
 export async function PUT(request: NextRequest, { params }: { params: Params }) {
   const { userId } = params;
   try {
-    const body = await request.json();
-    const userIndex = users.findIndex(u => u.id === userId);
+    const body = await request.json() as Partial<Omit<User, 'id' | 'createdAt'>>;
 
-    if (userIndex === -1) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Ensure that crucial fields like 'id' or 'createdAt' are not passed in body to be updated directly
+    // The updateUser function in lib/data/users.ts should handle this,
+    // but as a good practice, we can also ensure the body doesn't contain them.
+    const { id, createdAt, ...updateData } = body as any; // Exclude id and createdAt from body if present
+
+    const updatedUser = updateUser(userId, updateData);
+
+    if (!updatedUser) {
+      return NextResponse.json({ error: "User not found or update failed" }, { status: 404 });
     }
-
-    const updatedUser = { ...users[userIndex], ...body, updatedAt: new Date().toISOString() };
-    users[userIndex] = updatedUser;
-    
-    // Remove potentially sensitive fields like password if they were part of the body
-    // For this mock, we assume body is safe.
     return NextResponse.json(updatedUser);
   } catch (error) {
     return NextResponse.json({ error: "Invalid request body or error updating user." }, { status: 400 });
@@ -48,12 +41,11 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
 // DELETE /api/users/{userId} - Delete a user
 export async function DELETE(request: NextRequest, { params }: { params: Params }) {
   const { userId } = params;
-  const userIndex = users.findIndex(u => u.id === userId);
+  const success = deleteUser(userId);
 
-  if (userIndex === -1) {
+  if (!success) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  users.splice(userIndex, 1); // Remove the user
   return NextResponse.json({ message: `User ${userId} deleted successfully.`, timestamp: new Date().toISOString() });
 }
