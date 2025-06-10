@@ -5,7 +5,7 @@ import {
   updateItemInCart as updateItem,
   removeItemFromCart as removeItem,
   Cart
-} from '../../../../lib/data/carts';
+} from '../../../../../lib/data/carts';
 
 interface Params {
   sessionId: string;

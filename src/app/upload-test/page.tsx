@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -144,37 +144,45 @@ export default function UploadTestPage() {
 
   const fetchFilesList = async () => {
     try {
-      const response = await fetch('/api/files?limit=10');
+      // Use absolute URL for server-side rendering/static generation
+      const baseUrl = typeof window === 'undefined'
+        ? (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
+        : '';
+      const response = await fetch(`${baseUrl}/api/files?limit=10`);
       const data = await response.json();
       if (response.ok) {
         setFilesList(data.files || []);
       }
     } catch (error) {
       console.error('Failed to fetch files:', error);
+      // Optionally set an error state here to inform the user
     }
   };
 
   const testEndpoint = async (url: string, method: string = 'GET') => {
     try {
-      const response = await fetch(url, { method });
+      const baseUrl = typeof window === 'undefined'
+        ? (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
+        : '';
+      const response = await fetch(`${baseUrl}${url}`, { method });
       const data = await response.json();
       setUploadResult({
-        endpoint: `${method} ${url}`,
+        endpoint: `${method} ${baseUrl}${url}`,
         status: response.status,
         data
       });
     } catch (error) {
       setUploadResult({
-        endpoint: `${method} ${url}`,
+        endpoint: `${method} ${baseUrl}${url}`, // Keep baseUrl here for consistency in error reporting
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   };
 
-  // Load files list on component mount
-  useState(() => {
+  // Load files list on component mount (client-side only)
+  useEffect(() => {
     fetchFilesList();
-  });
+  }, []); // Empty dependency array ensures this runs once on mount
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">

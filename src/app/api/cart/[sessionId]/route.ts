@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { getCart, applyCouponToCart, deleteCart as removeCartFromStore, clearCart as emptyCartItems } from '../../../lib/data/carts';
+import { getCart, applyCouponToCart, deleteCart as removeCartFromStore, clearCart as emptyCartItems } from '../../../../lib/data/carts';
 
 interface Params {
   sessionId: string;
