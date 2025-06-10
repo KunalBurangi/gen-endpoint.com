@@ -1,4 +1,5 @@
 # GitHub Actions workflow for deploying to Firebase App Hosting
+# GitHub Actions workflow for deploying to Firebase App Hosting
 
 name: Deploy to Firebase App Hosting
 
