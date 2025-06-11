@@ -1,4 +1,3 @@
-
 import { type LucideIcon, Smile, Activity, Database, Zap, Users, ShoppingCart, Lock, PackageSearch, Upload, Search, Bell, BarChart3, FileText, MessageSquare, Webhook, Shield, MessageCircle, Clock, Link as LinkIcon, QrCode, Smartphone, Download, ShoppingBag, Boxes, Edit3, FileDown, Trash2, List, Tag } from 'lucide-react';
 
 export interface ApiEndpoint {
@@ -122,15 +121,15 @@ export const publicApis: ApiDefinition[] = [
         method: 'POST',
         path: '/api/users',
         description: 'Creates a new user.',
-        exampleRequest: '{\n  "name": "Charlie Brown",\n  "email": "charlie@example.com",\n  "password": "supersecretpassword",\n  "role": "viewer"\n}',
-        exampleResponse: '{"id": "usr_new", "name": "Charlie Brown", "email": "charlie@example.com", "role": "viewer", "createdAt": "2024-08-16T14:30:00Z"}'
+        exampleRequest: '{\n  "name": "Charlie Brown",\n  "email": "charlie@example.com",\n "role": "viewer",\n "profile": {"bio": "Good grief!"}\n}',
+        exampleResponse: '{"id": "usr_new", "name": "Charlie Brown", "email": "charlie@example.com", "role": "viewer", "createdAt": "2024-08-16T14:30:00Z", "profile": {"bio": "Good grief!"}}'
       },
       {
         method: 'PUT',
         path: '/api/users/{userId}',
         description: 'Updates an existing user by ID. Replace {userId} with an actual ID like `usr_1`.',
-        exampleRequest: '{\n  "name": "Alice Wonderland",\n  "email": "alice.wonderland@example.com",\n  "role": "lead_admin"\n}',
-        exampleResponse: '{"id": "usr_1", "name": "Alice Wonderland", "email": "alice.wonderland@example.com", "role": "lead_admin", "updatedAt": "2024-08-16T15:00:00Z"}'
+        exampleRequest: '{\n  "name": "Alice W. Wonderland",\n  "email": "alice.wonderland@example.com",\n  "role": "lead_admin"\n}',
+        exampleResponse: '{"id": "usr_1", "name": "Alice W. Wonderland", "email": "alice.wonderland@example.com", "role": "lead_admin", "createdAt": "2024-01-10T10:00:00Z", "updatedAt": "2024-08-16T15:00:00Z", "profile": {"bio": "Curiouser and curiouser!", "avatarUrl": "https://placehold.co/100x100.png" }}'
       },
       {
         method: 'DELETE',
@@ -151,22 +150,58 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/products',
-        description: 'Retrieves a list of products. Supports optional query parameters for filtering (e.g., `?category=electronics&inStock=true`) and `limit` to control the number of products returned (e.g., `?limit=1`). If no limit is provided, all products are returned (up to the total of 25 mock products).',
+        description: 'Retrieves a list of products. Supports optional query parameters for filtering (e.g., `?category=electronics&inStock=true`) and `limit` to control the number of products returned (e.g., `?limit=1`).',
         exampleRequest: 'Path: /api/products?category=Books&limit=1',
-        exampleResponse: '[\n  {"id": "prod_123", "name": "The Pragmatic Programmer", "category": "Books", "price": 29.99, "stock": 150, "imageUrl": "https://placehold.co/300x200.png", "description": "From journeyman to master.", "details": {"pages": 352, "author": "David Thomas, Andrew Hunt"}, "reviews": [{"rating": 5, "comment": "A must-read!"}]}\n]'
+        exampleResponse: JSON.stringify([{
+            id: "prod_123", name: "The Pragmatic Programmer", category: "Books", price: 29.99, stock: 150,
+            imageUrl: "https://placehold.co/300x200.png", description: "From journeyman to master.",
+            details: {"pages": 352, "author": "David Thomas, Andrew Hunt"},
+            reviews: [{"rating": 5, "comment": "A must-read!"}],
+            createdAt: "2024-01-10T10:00:00Z"
+        }], null, 2)
       },
       {
         method: 'GET',
         path: '/api/products/{productId}',
         description: 'Retrieves details for a specific product by ID. Replace {productId} with an ID like `prod_123`.',
-        exampleResponse: '{"id": "prod_123", "name": "The Pragmatic Programmer", "category": "Books", "price": 29.99, "stock": 150, "imageUrl": "https://placehold.co/300x200.png", "description": "From journeyman to master.", "details": {"pages": 352, "author": "David Thomas, Andrew Hunt"}, "reviews": [{"rating": 5, "comment": "A must-read!"}]}'
+        exampleResponse: JSON.stringify({
+            id: "prod_123", name: "The Pragmatic Programmer", category: "Books", price: 29.99, stock: 150,
+            imageUrl: "https://placehold.co/300x200.png", description: "From journeyman to master.",
+            details: {"pages": 352, "author": "David Thomas, Andrew Hunt"},
+            reviews: [{"rating": 5, "comment": "A must-read!"}],
+            createdAt: "2024-01-10T10:00:00Z"
+        }, null, 2)
       },
       {
         method: 'POST',
         path: '/api/products',
-        description: 'Adds a new product to the catalog (Admin only).',
-        exampleRequest: '{\n  "name": "Ergonomic Mechanical Keyboard",\n  "category": "Electronics",\n  "price": 159.99,\n  "stock": 50,\n  "imageUrl": "https://placehold.co/300x200.png",\n  "description": "Clicky and comfortable."\n}',
-        exampleResponse: '{"id": "prod_789", "name": "Ergonomic Mechanical Keyboard", "category": "Electronics", "price": 159.99, "stock": 50, "imageUrl": "https://placehold.co/300x200.png", "description": "Clicky and comfortable.", "createdAt": "2024-08-16T16:00:00Z"}'
+        description: 'Adds a new product to the catalog.',
+        exampleRequest: JSON.stringify({
+          name: "Ergonomic Mechanical Keyboard", category: "Electronics", price: 159.99, stock: 50,
+          imageUrl: "https://placehold.co/300x200.png", description: "Clicky and comfortable."
+        }, null, 2),
+        exampleResponse: JSON.stringify({
+            id: "prod_new", name: "Ergonomic Mechanical Keyboard", category: "Electronics", price: 159.99, stock: 50,
+            imageUrl: "https://placehold.co/300x200.png", description: "Clicky and comfortable.",
+            details: {}, reviews: [], createdAt: "2024-08-16T16:00:00Z"
+        }, null, 2)
+      },
+      {
+        method: 'PUT',
+        path: '/api/products/{productId}',
+        description: 'Updates an existing product by ID. Replace {productId} with an ID like `prod_123`.',
+        exampleRequest: JSON.stringify({ price: 149.99, stock: 45 }, null, 2),
+        exampleResponse: JSON.stringify({
+            id: "prod_123", name: "Ergonomic Mechanical Keyboard", category: "Electronics", price: 149.99, stock: 45,
+            imageUrl: "https://placehold.co/300x200.png", description: "Clicky and comfortable.",
+            createdAt: "2024-01-12T12:00:00Z", updatedAt: "2024-08-16T16:30:00Z"
+        }, null, 2)
+      },
+      {
+        method: 'DELETE',
+        path: '/api/products/{productId}',
+        description: 'Deletes a product by ID. Replace {productId} with an ID like `prod_456`.',
+        exampleResponse: JSON.stringify({ message: "Product prod_456 deleted successfully.", timestamp: "2024-08-16T17:00:00Z" }, null, 2)
       }
     ]
   },
@@ -348,22 +383,22 @@ export const publicApis: ApiDefinition[] = [
         method: 'POST',
         path: '/api/analytics/track',
         description: 'Track user events and custom metrics.',
-        exampleRequest: '{\n  "event": "page_view",\n  "userId": "usr_123",\n  "properties": {\n    "page": "/products",\n    "referrer": "google.com",\n    "device": "mobile"\n  },\n  "timestamp": "2024-08-16T12:00:00Z"\n}',
-        exampleResponse: '{\n  "success": true,\n  "eventId": "evt_789",\n  "processed": true\n}'
+        exampleRequest: '{\n  "event": "page_view",\n  "userId": "usr_123",\n  "sessionId": "sess_abc", \n "properties": {\n    "page": "/products",\n    "referrer": "google.com"\n  },\n  "timestamp": "2024-08-16T12:00:00Z"\n}',
+        exampleResponse: '{\n  "success": true,\n  "eventId": "evt_789",\n  "processed": true,\n  "timestamp": "2024-08-16T12:00:00Z"\n}'
       },
       {
         method: 'GET',
         path: '/api/analytics/track',
         description: 'Get recent tracked events for debugging.',
         exampleRequest: '?userId=usr_123&event=page_view&limit=10',
-        exampleResponse: '{\n  "events": [\n    {\n      "id": "evt_789",\n      "event": "page_view",\n      "userId": "usr_123",\n      "timestamp": "2024-08-16T12:00:00Z",\n      "properties": {"page": "/products"}\n    }\n  ],\n  "total": 50, "filtered": 10\n}'
+        exampleResponse: '{\n "events": [\n    {\n      "id": "evt_789",\n      "event": "page_view",\n      "userId": "usr_123",\n      "sessionId": "sess_abc",\n      "timestamp": "2024-08-16T12:00:00Z",\n      "properties": {"page": "/products", "userAgent": "Mozilla/5.0...", "ip": "127.0.0.1", "deviceType": "desktop"}\n    }\n  ],\n  "totalInFilter": 1,\n  "totalInStore": 50\n}'
       },
       {
         method: 'GET',
         path: '/api/analytics/dashboard',
         description: 'Get dashboard metrics and KPIs for specified time range.',
         exampleRequest: '?period=7d&metrics=pageviews,users,conversions',
-        exampleResponse: '{\n  "period": "7d",\n  "metrics": {\n    "pageviews": {"value": 15420, "change": "+12.5%"},\n    "uniqueUsers": {"value": 3254, "change": "+8.2%"},\n    "conversions": {"value": 89, "change": "-2.1%"}\n  },\n  "topPages": ["/products", "/home", "/about"]\n}'
+        exampleResponse: '{\n  "period": "7d",\n  "dateRange": {"start":"2024-08-09T...", "end":"2024-08-16T..."},\n  "metrics": {\n    "pageviews": {"value": 15420, "change": "+12.5%"},\n    "uniqueUsers": {"value": 3254, "change": "+8.2%"},\n    "conversions": {"value": 89, "change": "-2.1%"}\n  },\n  "topPages": [{"page":"/products", "views":500}, {"page":"/home", "views":300}],\n  "deviceBreakdown": [{"device":"desktop", "count":10000, "percentage":65}, {"device":"mobile", "count":5420, "percentage":35}],\n "realTime": {"activeUsers":123, "pageViewsLastHour":1500, "eventsLastHour":3200},\n "generatedAt":"2024-08-16T..." \n}'
       }
     ]
   },
@@ -386,19 +421,19 @@ export const publicApis: ApiDefinition[] = [
         method: 'GET',
         path: '/api/export/{format}',
         description: 'Get information about the specified export format. Replace {format} with "csv", "json", or "xml".',
-        exampleResponse: '{\n  "format": "csv",\n  "mimeType": "text/csv",\n  "description": "Comma-separated values format",\n  "supportedEntities": ["users", "products", "orders"]\n}'
+        exampleResponse: '{\n  "format": "csv",\n  "mimeType": "text/csv",\n  "description": "Comma-separated values format",\n "supportedEntities": ["users", "products", "orders"], \n "exampleRequest": { "entity": "users", "filters": {"role": "admin"}, "fields": ["name", "email", "createdAt"]}\n}'
       },
       {
         method: 'GET',
         path: '/api/export/status/{jobId}',
         description: 'Check export job status and get download link if completed. Replace {jobId} with an actual job ID like `export_123`.',
-        exampleResponse: '{\n  "id": "export_123",\n  "format": "csv",\n  "entity": "users",\n  "status": "completed",\n  "totalRecords": 150,\n  "createdAt": "2024-08-16T12:00:00Z",\n  "completedAt": "2024-08-16T12:04:30Z",\n  "downloadUrl": "/api/export/download/export_123",\n  "fileSize": 2048000,\n  "filename": "users-export-2024-08-16.csv",\n  "mimeType": "text/csv"\n}'
+        exampleResponse: '{\n  "id": "export_123",\n  "format": "csv",\n  "entity": "users",\n  "status": "completed",\n  "totalRecords": 150,\n  "createdAt": "2024-08-16T12:00:00Z",\n  "completedAt": "2024-08-16T12:04:30Z",\n  "downloadUrl": "/api/export/download/export_123",\n  "fileSize": 2048000,\n  "filename": "users-export-2024-08-16.csv",\n  "mimeType": "text/csv",\n "progress": 100\n}'
       },
       {
         method: 'DELETE',
         path: '/api/export/status/{jobId}',
         description: 'Cancel an export job. Replace {jobId} with an actual job ID.',
-        exampleResponse: '{\n  "message": "Export job export_456 cancelled successfully",\n  "jobId": "export_456",\n  "status": "cancelled"\n}'
+        exampleResponse: '{\n  "message": "Export job export_456 cancelled successfully",\n  "jobId": "export_456",\n  "status": "cancelled",\n  "cancelledAt": "2024-08-16T12:10:00Z"\n}'
       }
     ]
   },
@@ -413,34 +448,62 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'GET',
         path: '/api/cart/{sessionId}',
-        description: 'Get cart contents for session with item details and totals. Replace {sessionId} with an actual session ID (e.g., sess_123).',
-        exampleResponse: '{\n  "sessionId": "sess_123",\n  "items": [\n    {\n      "id": "item_1",\n      "productId": "prod_123",\n      "name": "Wireless Headphones",\n      "price": 99.99,\n      "quantity": 2,\n      "options": {"color": "black", "size": "standard"},\n      "imageUrl": "https://placehold.co/100x100.png",\n      "subtotal": 199.98,\n      "addedAt": "2024-08-16T12:00:00Z"\n    }\n  ],\n  "totals": {"subtotal": 199.98, "tax": 16.00, "shipping": 0.00, "discount": 0, "total": 215.98},\n  "createdAt": "2024-08-16T12:00:00Z",\n  "updatedAt": "2024-08-16T12:00:00Z",\n  "expiresAt": "2024-08-17T12:00:00Z"\n}'
+        description: 'Get cart contents for session. Creates a new cart if sessionId is new or cart expired. Replace {sessionId} with an ID (e.g., sess_123).',
+        exampleResponse: JSON.stringify({
+          id: "sess_123", userId: null, items: [
+            { id: "item_abc", productId: "prod_123", name: "Wireless Headphones", priceAtTimeOfAddition: 99.99, quantity: 1, imageUrl: "https://placehold.co/100x100.png", options: {color: "black"}, subtotal: 99.99 }
+          ],
+          subtotal: 99.99, tax: 8.00, shipping: 0, discount: 0, total: 107.99,
+          createdAt: "2024-08-20T10:00:00Z", updatedAt: "2024-08-20T10:05:00Z", expiresAt: "2024-08-21T10:00:00Z"
+        }, null, 2)
       },
       {
         method: 'POST',
         path: '/api/cart/{sessionId}/items',
         description: 'Add an item to the cart. Replace {sessionId} with a session ID.',
-        exampleRequest: '{\n  "productId": "prod_456",\n  "quantity": 1,\n  "options": {"format": "paperback"}\n}',
-        exampleResponse: '{\n  "success": true,\n  "item": {\n    "id": "item_randomId",\n    "productId": "prod_456",\n    "name": "JavaScript Book",\n    "price": 29.99,\n    "quantity": 1,\n    "options": {"format": "paperback"},\n    "imageUrl": "https://placehold.co/100x100.png",\n    "subtotal": 29.99,\n    "addedAt": "2024-08-17T10:00:00Z"\n  },\n  "cartTotal": 245.97,\n  "itemCount": 3\n}'
+        exampleRequest: JSON.stringify({ productId: "prod_456", quantity: 1, options: {format: "paperback"} }, null, 2),
+        exampleResponse: JSON.stringify({
+          success: true,
+          item: { id: "item_xyz", productId: "prod_456", name: "JavaScript Book", priceAtTimeOfAddition: 29.99, quantity: 1, options: {format: "paperback"}, imageUrl: "https://placehold.co/100x100.png", subtotal: 29.99 },
+          cart: { /* Full cart object */ }
+        }, null, 2)
       },
       {
         method: 'GET',
         path: '/api/cart/{sessionId}/items',
         description: 'List all items in the specified cart. Replace {sessionId} with a session ID.',
-        exampleResponse: '{\n  "items": [\n    {\n      "id": "item_1",\n      "productId": "prod_123",\n      "name": "Wireless Headphones",\n      "price": 99.99,\n      "quantity": 2, \n      "options": {"color": "black"},\n      "subtotal": 199.98\n    }\n  ],\n  "itemCount": 2,\n  "totals": {"subtotal": 199.98, "tax": 16.00, "shipping": 0.00, "discount": 0, "total": 215.98}\n}'
+        exampleResponse: JSON.stringify({
+          items: [{ id: "item_abc", productId: "prod_123", name: "Wireless Headphones", priceAtTimeOfAddition: 99.99, quantity: 1, options: {color: "black"}, subtotal: 99.99 }],
+          itemCount: 1,
+          totals: { subtotal: 99.99, tax: 8.00, shipping: 0, discount: 0, total: 107.99 }
+        }, null, 2)
+      },
+      {
+        method: 'PUT',
+        path: '/api/cart/{sessionId}/items',
+        description: 'Update quantity of an item in the cart. Expects itemId and new quantity. Replace {sessionId} with a session ID.',
+        exampleRequest: JSON.stringify({ itemId: "item_abc", quantity: 2 }, null, 2),
+        exampleResponse: JSON.stringify({ /* Full updated cart object */ }, null, 2)
+      },
+      {
+        method: 'DELETE',
+        path: '/api/cart/{sessionId}/items',
+        description: 'Remove an item from the cart. Expects itemId. Replace {sessionId} with a session ID.',
+        exampleRequest: JSON.stringify({ itemId: "item_abc" }, null, 2),
+        exampleResponse: JSON.stringify({ /* Full updated cart object */ }, null, 2)
       },
       {
         method: 'PUT',
         path: '/api/cart/{sessionId}',
         description: 'Update cart metadata, e.g., apply a coupon code. Replace {sessionId} with a session ID.',
-        exampleRequest: '{\n  "couponCode": "SAVE10"\n}',
-        exampleResponse: '{\n  "sessionId": "sess_123",\n  "items": [{"id": "item_1", "name": "Wireless Headphones", "quantity": 2, "subtotal": 199.98}],\n  "totals": {"subtotal": 199.98, "tax": 16.00, "shipping": 0.00, "discount": 20.00, "total": 195.98},\n  "couponCode": "SAVE10",\n  "updatedAt": "2024-08-17T11:00:00Z"\n}'
+        exampleRequest: JSON.stringify({ couponCode: "SAVE10" }, null, 2),
+        exampleResponse: JSON.stringify({ /* Full updated cart object with coupon applied */ }, null, 2)
       },
       {
         method: 'DELETE',
         path: '/api/cart/{sessionId}',
-        description: 'Clear all items from the cart. Replace {sessionId} with a session ID.',
-        exampleResponse: '{\n  "message": "Cart cleared successfully",\n  "timestamp": "2024-08-17T11:05:00Z"\n}'
+        description: 'Clear all items from the cart (cart session persists but is empty). Replace {sessionId} with a session ID.',
+        exampleResponse: JSON.stringify({ message: "Cart sess_123 cleared successfully.", timestamp: "2024-08-17T11:05:00Z" }, null, 2)
       }
     ]
   },
@@ -455,23 +518,56 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'POST',
         path: '/api/payments/process',
-        description: 'Process payment with validation and fraud detection.',
-        exampleRequest: '{\n  "amount": 99.99,\n  "currency": "USD",\n  "paymentMethod": {\n    "type": "card",\n    "token": "pm_1234567890"\n  },\n  "orderId": "order_123",\n  "billingAddress": {\n    "street": "123 Main St",\n    "city": "Anytown",\n    "state": "CA",\n    "zipCode": "12345",\n    "country": "US"\n  }\n}',
-        exampleResponse: '{\n  "paymentId": "pay_789",\n  "status": "succeeded",\n  "amount": 99.99,\n  "currency": "USD",\n  "transactionId": "txn_456",\n  "processedAt": "2024-08-16T12:00:00Z"\n}'
+        description: 'Process payment. Simulates async gateway interaction.',
+        exampleRequest: JSON.stringify({
+          orderId: "order_123",
+          amount: 99.99,
+          currency: "USD",
+          paymentMethod: { type: "card", token: "tok_visa" },
+          customerId: "cust_abc"
+        }, null, 2),
+        exampleResponse: JSON.stringify({ // Initial response
+          paymentId: "pay_xyz123",
+          status: "pending",
+          amount: 99.99,
+          currency: "USD",
+          orderId: "order_123",
+          createdAt: "2024-08-20T12:00:00Z",
+          message: "Payment processing initiated."
+        }, null, 2)
       },
       {
         method: 'POST',
         path: '/api/payments/{paymentId}/refund',
-        description: 'Process full or partial refund for payment. Replace {paymentId} with an actual payment ID.',
-        exampleRequest: '{\n  "amount": 49.99,\n  "reason": "customer_request",\n  "refundId": "ref_123"\n}',
-        exampleResponse: '{\n  "refundId": "ref_123",\n  "status": "processing",\n  "amount": 49.99,\n  "originalPayment": "pay_789",\n  "estimatedCompletion": "2024-08-19T12:00:00Z"\n}'
+        description: 'Process full or partial refund for a payment. Replace {paymentId} with an actual transaction ID.',
+        exampleRequest: JSON.stringify({ amount: 49.99, reason: "customer_request", currency: "USD" }, null, 2),
+        exampleResponse: JSON.stringify({
+          refundId: "ref_abc789",
+          originalPaymentId: "pay_xyz123",
+          paymentStatus: "partially_refunded", // or "refunded"
+          refundedAmount: 49.99,
+          currency: "USD",
+          reason: "customer_request",
+          processedAt: "2024-08-20T12:05:00Z",
+          payment: { /* updated payment object */ }
+        }, null, 2)
       },
       {
         method: 'GET',
         path: '/api/payments/history',
-        description: 'Get payment transaction history with filtering.',
-        exampleRequest: '?userId=usr_123&status=succeeded&limit=10&page=1',
-        exampleResponse: '{\n  "payments": [\n    {\n      "id": "pay_789",\n      "amount": 99.99,\n      "status": "succeeded",\n      "createdAt": "2024-08-16T12:00:00Z"\n    }\n  ],\n  "pagination": {"page": 1, "limit": 10, "total": 25}\n}'
+        description: 'Get payment transaction history. Supports filtering by userId (as customerId), status, orderId, and pagination.',
+        exampleRequest: '?userId=cust_abc&status=succeeded&limit=10&page=1',
+        exampleResponse: JSON.stringify({
+          payments: [
+            {
+              id: "pay_xyz123", orderId: "order_123", customerId: "cust_abc", amount: 99.99, currency: "USD",
+              status: "succeeded", createdAt: "2024-08-20T12:00:00Z", updatedAt: "2024-08-20T12:00:01Z",
+              paymentMethod: { type: "card", brand: "Visa", last4: "4242"},
+              paymentGatewayDetails: { gatewayTransactionId: "gw_pay_xyz123", responseCode: "00", message: "Payment successful" }
+            }
+          ],
+          pagination: {"page": 1, "limit": 10, "total": 1, "pages": 1}
+        }, null, 2)
       }
     ]
   },
@@ -707,7 +803,7 @@ export const publicApis: ApiDefinition[] = [
   {
     id: 'url-shortener-api',
     name: 'URL Shortener API',
-    description: 'Create and manage shortened URLs with click tracking, expiration, and custom aliases.',
+    description: 'Create, manage, and get stats for shortened URLs. Includes a redirector endpoint.',
     category: 'Utilities',
     documentationUrl: '/apis/url-shortener-api',
     Icon: LinkIcon,
@@ -715,28 +811,44 @@ export const publicApis: ApiDefinition[] = [
       {
         method: 'POST',
         path: '/api/shorten',
-        description: 'Create shortened URL with optional custom alias and expiration.',
-        exampleRequest: '{\n  "originalUrl": "https://www.example.com/very/long/path/to/content",\n  "customAlias": "my-link",\n  "expiresAt": "2024-12-31T23:59:59Z",\n  "description": "Link to important content"\n}',
-        exampleResponse: '{\n  "id": "link_123",\n  "shortUrl": "https://short.ly/my-link",\n  "originalUrl": "https://www.example.com/very/long/path/to/content",\n  "shortCode": "my-link",\n  "createdAt": "2024-08-16T12:00:00Z",\n  "expiresAt": "2024-12-31T23:59:59Z"\n}'
+        description: 'Create a new shortened URL. Custom alias (shortCode) and expiration are optional.',
+        exampleRequest: "{\n  \"originalUrl\": \"https://www.verylongurl.com/path/to/something/interesting?query=param\",\n  \"customAlias\": \"my-custom-link\",\n  \"description\": \"Link to an interesting article\",\n  \"expiresAt\": \"2025-12-31T23:59:59Z\",\n  \"userId\": \"user_abc_123\"\n}",
+        exampleResponse: "{\n  \"id\": \"link_nanoid10\",\n  \"shortUrl\": \"http://localhost:3000/s/my-custom-link\",\n  \"originalUrl\": \"https://www.verylongurl.com/path/to/something/interesting?query=param\",\n  \"shortCode\": \"my-custom-link\",\n  \"createdAt\": \"2024-08-20T10:00:00.000Z\",\n  \"expiresAt\": \"2025-12-31T23:59:59Z\",\n  \"description\": \"Link to an interesting article\",\n  \"clickCount\": 0\n}"
       },
       {
         method: 'GET',
         path: '/api/stats/{shortCode}',
-        description: 'Get click statistics and analytics for shortened URL. Replace {shortCode} with an actual code.',
-        exampleResponse: '{\n  "shortCode": "my-link",\n  "originalUrl": "https://www.example.com/very/long/path/to/content",\n  "totalClicks": 1250,\n  "uniqueClicks": 892,\n  "clicksByDate": [\n    {"date": "2024-08-15", "clicks": 45},\n    {"date": "2024-08-16", "clicks": 67}\n  ],\n  "topReferrers": ["google.com", "twitter.com", "facebook.com"],\n  "countries": [{"code": "US", "name": "United States", "clicks": 678}]\n}'
+        description: 'Get statistics for a shortened URL. Replace {shortCode} with an actual short code.',
+        exampleRequest: 'Path parameter example: /api/stats/my-custom-link',
+        exampleResponse: "{\n  \"shortCode\": \"my-custom-link\",\n  \"originalUrl\": \"https://www.verylongurl.com/path/to/something/interesting?query=param\",\n  \"totalClicks\": 150,\n  \"uniqueClicks\": 150,\n  \"clicksByDate\": [],\n  \"topReferrers\": [],\n  \"countries\": [],\n  \"createdAt\": \"2024-08-20T10:00:00.000Z\",\n  \"description\": \"Link to an interesting article\",\n  \"expiresAt\": \"2025-12-31T23:59:59Z\"\n}"
       },
       {
         method: 'GET',
         path: '/api/links',
-        description: 'List user\'s shortened URLs with filtering.',
-        exampleRequest: '?status=active&sort=created_desc&page=1&limit=10',
-        exampleResponse: '{\n  "links": [\n    {\n      "id": "link_123",\n      "shortCode": "my-link",\n      "originalUrl": "https://www.example.com/very/long/path/to/content",\n      "totalClicks": 1250,\n      "status": "active",\n      "createdAt": "2024-08-16T12:00:00Z"\n    }\n  ],\n  "pagination": {"page": 1, "limit": 10, "total": 45}\n}'
+        description: 'List all shortened URLs. Supports optional `userId` query parameter for filtering.',
+        exampleRequest: 'Optional query: /api/links?userId=user_abc_123',
+        exampleResponse: "{\n  \"links\": [\n    {\n      \"id\": \"link_nanoid10\",\n      \"shortCode\": \"my-custom-link\",\n      \"originalUrl\": \"https://www.verylongurl.com/path/to/something/interesting?query=param\",\n      \"totalClicks\": 150,\n      \"status\": \"active\",\n      \"createdAt\": \"2024-08-20T10:00:00.000Z\",\n      \"description\": \"Link to an interesting article\",\n      \"expiresAt\": \"2025-12-31T23:59:59Z\",\n      \"userId\": \"user_abc_123\"\n    },\n    {\n      \"id\": \"link_anotherid\",\n      \"shortCode\": \"another\",\n      \"originalUrl\": \"https://www.anotherurl.com\",\n      \"totalClicks\": 75,\n      \"status\": \"expired\",\n      \"createdAt\": \"2023-01-15T10:00:00.000Z\",\n      \"description\": \"Old link\",\n      \"expiresAt\": \"2023-12-31T23:59:59Z\",\n      \"userId\": \"user_def_456\"\n    }\n  ]\n}"
+      },
+      {
+        method: 'GET',
+        path: '/api/links/{linkId}',
+        description: 'Get details for a specific short link by its internal ID. Replace {linkId} with an actual link ID.',
+        exampleRequest: 'Path parameter example: /api/links/link_nanoid10',
+        exampleResponse: "{\n  \"id\": \"link_nanoid10\",\n  \"shortCode\": \"my-custom-link\",\n  \"originalUrl\": \"https://www.verylongurl.com/path/to/something/interesting?query=param\",\n  \"totalClicks\": 150,\n  \"status\": \"active\",\n  \"createdAt\": \"2024-08-20T10:00:00.000Z\",\n  \"description\": \"Link to an interesting article\",\n  \"expiresAt\": \"2025-12-31T23:59:59Z\",\n  \"userId\": \"user_abc_123\"\n}"
       },
       {
         method: 'DELETE',
         path: '/api/links/{linkId}',
-        description: 'Delete shortened URL and disable access. Replace {linkId} with an actual ID.',
-        exampleResponse: '{\n  "message": "Link link_123 deleted successfully",\n  "deletedAt": "2024-08-16T12:30:00Z"\n}'
+        description: 'Delete a specific short link by its internal ID. Replace {linkId} with an actual link ID.',
+        exampleRequest: 'Path parameter example: /api/links/link_nanoid10',
+        exampleResponse: "{\n  \"message\": \"Link link_nanoid10 deleted successfully\",\n  \"deletedAt\": \"2024-08-20T12:30:00.000Z\"\n}"
+      },
+      {
+        method: 'GET',
+        path: '/s/{shortCode}',
+        description: 'Redirector endpoint. Accessing this path with a valid shortCode redirects to the original URL and increments the click count. This is not a JSON API but the core functionality.',
+        exampleRequest: 'Browser access example: http://yourdomain.com/s/my-custom-link',
+        exampleResponse: '(HTTP 302 Redirect to originalUrl)'
       }
     ]
   },
@@ -838,5 +950,3 @@ export const apiCategories: string[] = Array.from(new Set(publicApis.map(api => 
 export const getApiById = (id: string): ApiDefinition | undefined => {
   return publicApis.find(api => api.id === id);
 };
-
-    
