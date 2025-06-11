@@ -60,6 +60,7 @@ For example:
 IMPORTANT: Only output the raw JSON data, nothing else. Do not include markdown formatting like \`\`\`json ... \`\`\` around the JSON object.
 The response must be a valid JSON string.`;
 
+    console.log("Reaching generateRuntimeResponseFlow with input before generate:");
     const response = await customGenkit.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: systemPrompt,

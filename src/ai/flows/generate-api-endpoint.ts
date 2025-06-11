@@ -70,10 +70,14 @@ const generateApiEndpointFlow = globalAi.defineFlow(
     outputSchema: GenerateApiEndpointOutputSchema,
   },
   async (input) => {
+      console.log("Reaching  generateApiEndpointFlow")
+
     if (!input.userApiKey) {
       throw new Error("User API key is required. Please provide it using the API Key Manager.");
     }
     const customGenkit = genkit({ plugins: [googleAI({ apiKey: input.userApiKey })] });
+      console.log("Reaching  generateApiEndpointFlow", input.userApiKey)
+
     try {
       const response = await customGenkit.generate({
         model: 'googleai/gemini-2.0-flash',

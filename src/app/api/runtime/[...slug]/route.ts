@@ -70,8 +70,10 @@ async function handleRuntimeRequest(request: NextRequest, params: { slug: string
       requestBody: requestBodyForAiString, // This is the actual data part of the body (if any)
       userApiKey,
     };
+    console.log("Input for generateRuntimeResponse:", input);
     const result = await generateRuntimeResponse(input);
-    
+    console.log("after Input for generateRuntimeResponse:", input);
+
     try {
       const jsonData = JSON.parse(result.jsonResponse);
       return NextResponse.json(jsonData);
