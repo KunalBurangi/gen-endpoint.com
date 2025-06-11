@@ -3,6 +3,7 @@
 
 import type { ApiEndpoint } from '@/data/apis';
 import { useState, useEffect } from 'react';
+import { getUserApiKey } from '@/app/generate/components/ApiKeyManager';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { CodeBlock } from '@/components/CodeBlock';
@@ -88,6 +89,19 @@ export function InteractiveEndpoint({ endpoint, isSimulationOnly = false }: Inte
       headers: {},
     };
 
+    const fetchPath = requestPath.startsWith('/api/') ? requestPath : `/api${requestPath.startsWith('/') ? '' : '/'}${requestPath}`;
+
+    if (fetchPath.startsWith('/api/runtime/')) {
+      const userApiKey = getUserApiKey();
+      if (!userApiKey) {
+        setError("Google AI API Key is required for this runtime endpoint. Please set it in the 'AI Key Manager' section on the Generate page.");
+        setStatusCode(401); // Unauthorized
+        setIsLoading(false);
+        return;
+      }
+      (options.headers as Record<string, string>)['X-Goog-Api-Key'] = userApiKey;
+    }
+
     // Handle file uploads
     if (isFileUploadEndpoint && selectedFiles.length > 0) {
       const formData = new FormData();
@@ -100,8 +114,6 @@ export function InteractiveEndpoint({ endpoint, isSimulationOnly = false }: Inte
       (options.headers as Record<string, string>)['Content-Type'] = 'application/json';
       options.body = requestBody;
     }
-    
-    const fetchPath = requestPath.startsWith('/api/') ? requestPath : `/api${requestPath.startsWith('/') ? '' : '/'}${requestPath}`;
 
     let httpResponse: Response | null = null;
     try {
