@@ -127,6 +127,7 @@ Ensure your entire output is a single JSON object matching the required output s
       setGeneratedOutput(finalResult);
       toast({ title: "Success", description: "API Endpoint details generated." });
     } catch (error) {
+      console.log("Error generating API endpoint:", error);
       console.error("Error generating API endpoint:", error);
       let title = "Error";
       let description = "An unexpected error occurred while generating API endpoint details.";

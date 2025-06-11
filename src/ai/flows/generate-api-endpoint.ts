@@ -70,13 +70,23 @@ const generateApiEndpointFlow = globalAi.defineFlow(
     outputSchema: GenerateApiEndpointOutputSchema,
   },
   async (input) => {
-      console.log("Reaching  generateApiEndpointFlow")
+    console.log("[generateApiEndpointFlow] Received input:", JSON.stringify(input)); // Log the whole input
 
     if (!input.userApiKey) {
+      console.error("[generateApiEndpointFlow] Error: input.userApiKey is missing or empty.");
       throw new Error("User API key is required. Please provide it using the API Key Manager.");
+    } else {
+      console.log("[generateApiEndpointFlow] input.userApiKey is present. Length:", input.userApiKey.length);
+      console.log("[generateApiEndpointFlow] Type of input.userApiKey:", typeof input.userApiKey);
+      // It's good practice not to log the full key, but for debugging, let's log the first few and last few characters
+      const keyPreview = `${input.userApiKey.substring(0, 5)}...${input.userApiKey.substring(input.userApiKey.length - 5)}`;
+      console.log("[generateApiEndpointFlow] input.userApiKey preview:", keyPreview);
     }
+
+    // Ensure this log is right before genkit() call
+    console.log("[generateApiEndpointFlow] Initializing customGenkit with userApiKey.");
     const customGenkit = genkit({ plugins: [googleAI({ apiKey: input.userApiKey })] });
-      console.log("Reaching  generateApiEndpointFlow", input.userApiKey)
+    console.log("[generateApiEndpointFlow] customGenkit initialized.");
 
     try {
       const response = await customGenkit.generate({

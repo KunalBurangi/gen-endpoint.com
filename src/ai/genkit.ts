@@ -1,7 +1,9 @@
 import {genkit} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
 
+// This 'ai' instance is used for defining flow structures, prompts, etc.
+// It should not initialize plugins that require API keys at module load time.
+// The actual googleAI plugin with API key will be initialized per-request in the specific flow.
 export const ai = genkit({
-  plugins: [googleAI()],
-  model: 'googleai/gemini-2.0-flash',
+  plugins: [], // Remove googleAI() from here
+  // The model will be specified in the individual generate() calls within each flow.
 });
