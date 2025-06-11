@@ -15,7 +15,7 @@ export function Footer() {
           </p>
           <div className="flex items-center justify-center text-sm text-muted-foreground">
             <Heart className="h-4 w-4 mr-1.5 text-red-500 fill-red-500" /> {/* Added fill for the heart */}
-            <span>Made with love in India</span>
+            <span>Made with love in India-V3</span>
           </div>
           <Button variant="link" asChild size="sm" className="text-muted-foreground hover:text-primary">
             <Link href="/about">
