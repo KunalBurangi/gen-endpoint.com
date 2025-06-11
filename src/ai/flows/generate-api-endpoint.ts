@@ -73,21 +73,29 @@ const generateApiEndpointFlow = globalAi.defineFlow(
     if (!input.userApiKey) {
       throw new Error("User API key is required. Please provide it using the API Key Manager.");
     }
-
     const customGenkit = genkit({ plugins: [googleAI({ apiKey: input.userApiKey })] });
-    const response = await customGenkit.generate({
-      model: 'googleai/gemini-2.0-flash',
-      system: systemPrompt,
-      prompt: `User Prompt: ${input.prompt}`,
-      output: { schema: GenerateApiEndpointOutputSchema },
-    });
-    
-    const output = response.output;
-    if (!output) {
-      console.error("AI response was empty or could not be parsed to the GenerateApiEndpointOutputSchema. Raw response text:", response.text);
-      const errorText = response.text ?? "No error text available from AI response.";
-      throw new Error(`AI response could not be parsed to the expected format. AI message: ${errorText}`);
+    try {
+      const response = await customGenkit.generate({
+        model: 'googleai/gemini-2.0-flash',
+        system: systemPrompt,
+        prompt: `User Prompt: ${input.prompt}`,
+        output: { schema: GenerateApiEndpointOutputSchema },
+      });
+
+      const output = response.output; // This is already the parsed output object or null
+      if (!output) {
+        // Try to get raw text if output is null and response.text is a function
+        const rawText = typeof response.text === 'function' ? response.text() : response.text;
+        console.error("[generateApiEndpointFlow] AI response.output was null or undefined. Raw response text:", rawText);
+        const errorText = rawText ?? "No error text available from AI response.";
+        throw new Error(`AI response output was empty or could not be parsed to the expected schema. AI message: ${errorText}`);
+      }
+      return output;
+    } catch (e: any) {
+      console.error("[generateApiEndpointFlow] Error during customGenkit.generate() or output processing:", e);
+      // Re-throw a new, standard Error to ensure clean propagation to the client
+      // Include a more specific prefix for easier debugging from client-side logs if it reaches there
+      throw new Error(`AI Generation Error: ${e.message || 'An unknown error occurred during AI processing.'}`);
     }
-    return output;
   }
 );
