@@ -42,13 +42,15 @@ export default function BlogPostPage() {
           } else {
             throw new Error(`Failed to fetch post: ${response.statusText}`);
           }
-        } else {
-          const data = await response.json();
-          setPost(data.post || null); // Adjust based on actual API response
-          if (!data.post) {
-            setError('Post not found.');
-          }
+          // Post not found error is set, loading will be set to false in finally.
+          // No further processing needed for 404.
+          return;
         }
+        // If response.ok is true, proceed to parse JSON
+        const postData = await response.json();
+        // Assuming a 200 OK means valid postData.
+        // If postData could be null/empty on 200, further checks might be needed here.
+        setPost(postData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
       } finally {
