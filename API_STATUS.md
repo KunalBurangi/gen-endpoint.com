@@ -1,5 +1,10 @@
 # 🚀 Gen-Endpoint API Status Summary
 
+## 📝 Audit Note (2025-06-12)
+
+Recent automated testing (as of 2025-06-12) using `scripts/test-apis.ts` has revealed discrepancies between the previously documented status and the actual implementation state of some APIs. The following sections have been updated to reflect these findings. For detailed test results, refer to the output of the test script.
+
+
 ## ✅ **Fixed Issues**
 
 ### **Advanced Search API Error (RESOLVED)**
@@ -16,7 +21,7 @@
 
 ## 📊 **API Implementation Status**
 
-### **✅ FULLY IMPLEMENTED (23 APIs)**
+### **✅ PARTIALLY IMPLEMENTED (Approx. 17 of 23 originally listed APIs functional)**
 
 #### **Core APIs (6)**
 - ✅ Greeting API (`/api/greeting`)
@@ -41,7 +46,7 @@
 #### **E-commerce (3 APIs)**
 - ✅ Shopping Cart API (`/api/cart/{sessionId}`)
 - ✅ Payment Processing API (`/api/payments`)
-- ✅ Inventory Management API (`/api/inventory`)
+- ❌ **Inventory Management API** (`/api/inventory/*`) - **REQUIRES IMPLEMENTATION** (Identified 2025-06-12)
 
 #### **Communication (3 APIs)**
 - ✅ Email Notifications API (`/api/notifications/email`)
@@ -59,17 +64,17 @@
 
 #### **Content & Social (2 APIs)**
 - ✅ Blog & CMS API (`/api/posts`)
-- ✅ Comments & Reviews API (`/api/comments`)
+- ❌ **Comments & Reviews API** (`/api/comments/*`) - **REQUIRES IMPLEMENTATION** (Identified 2025-06-12)
 
 #### **System & Security (2 APIs)**
-- ✅ Background Jobs API (`/api/jobs`)
-- ✅ Rate Limiting API (`/api/limited`)
-- ✅ Webhook Management API (`/api/webhooks`)
+- ❌ **Background Jobs API** (`/api/jobs/*`) - **REQUIRES IMPLEMENTATION** (Identified 2025-06-12)
+- ❌ **Rate Limiting API** (`/api/limited/*`) - **REQUIRES IMPLEMENTATION** (Identified 2025-06-12)
+- ❌ **Webhook Management API** (`/api/webhooks/*`) - **REQUIRES IMPLEMENTATION** (Identified 2025-06-12)
 
 #### **Utilities (3 APIs)**
 - ✅ URL Shortener API (`/api/shorten`)
 - ✅ QR Code Generator API (`/api/qr`)
-- ✅ Device Management API (`/api/devices`)
+- ❌ **Device Management API** (`/api/devices/*`) - **REQUIRES IMPLEMENTATION** (Identified 2025-06-12)
 
 ## 🛠️ **Testing Options Available**
 
@@ -123,23 +128,33 @@ All endpoints support cURL testing with comprehensive examples
 - ✅ Include realistic example data
 - ✅ Handle edge cases and errors
 
-### **Zero Known Issues**
-- ✅ No compilation errors
-- ✅ No runtime exceptions
-- ✅ No broken documentation links
-- ✅ No 404 endpoints
-- ✅ All JSON examples valid
+### ⚠️ Known Issues (as of 2025-06-12)
 
-## 🚀 **Next Steps**
+- ⚠️ **Several APIs are missing implementations and will result in module load errors or 404s (see '🛠️ APIs Requiring Server-Side Implementation (2025-06-12)').**
+- ⚠️ **Test script results from `scripts/test-apis.ts` show additional HTTP errors for some implemented endpoints (needs detailed review).**
+- ✅ Many APIs appear functional or partially implemented, but thorough verification is ongoing.
+## 🚀 Next Steps (Updated 2025-06-12)
 
-The Gen-Endpoint project is now a complete, working API showcase with:
-- **23 fully functional APIs**
-- **Multiple testing interfaces**
-- **Comprehensive documentation**
-- **Real-world business logic examples**
+The Gen-Endpoint project aims to be a complete API showcase. Current status (as of 2025-06-12):
 
-All APIs are ready for immediate testing and use as learning resources or development templates.
+- **Approximately 27 APIs appear functional or partially implemented.**
+- **6 APIs require server-side implementation (see list under '🛠️ APIs Requiring Server-Side Implementation (2025-06-12)').**
+- Multiple testing interfaces are available.
+- Documentation is largely comprehensive but will be updated as APIs are implemented/fixed.
+- Real-world business logic examples are present in many implemented APIs.
+
+Many APIs are ready for testing. However, those listed as requiring server-side implementation are not yet functional. This document will be updated as implementations are completed.
 
 ---
 *Last Updated: 2024-08-16*
 *Status: All systems operational*
+## 🛠️ APIs Requiring Server-Side Implementation (2025-06-12)
+
+- ❌ **Inventory Management API** (`/api/inventory/*`)
+- ❌ **Comments & Reviews API** (`/api/comments/*`)
+- ❌ **Webhook Management API** (`/api/webhooks/*`)
+- ❌ **Rate Limiting API** (`/api/limited/*`)
+- ❌ **Background Jobs API** (`/api/jobs/*`)
+- ❌ **Device Management API** (`/api/devices/*`)
+
+These APIs are defined in `src/data/apis.ts` but their core server-side route handlers were not found by the `scripts/test-apis.ts` audit. They are currently **NOT FUNCTIONAL**.
