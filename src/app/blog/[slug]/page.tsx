@@ -60,12 +60,20 @@ export default function BlogPostPage() {
     fetchPost();
   }, [slug]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) {
+      return 'Not published'; // Or some other placeholder
+    }
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch (error) {
+      console.error("Error formatting date:", dateString, error);
+      return 'Invalid date';
+    }
   };
 
   if (loading) {

@@ -1,106 +1,140 @@
-
 import { type NextRequest, NextResponse } from 'next/server';
-
-// Mock data for blog posts - in a real app, share this or use a DB
-const mockPosts = [
-  {
-    id: "post_123",
-    title: "Getting Started with JavaScript",
-    slug: "getting-started-javascript",
-    excerpt: "Learn the basics of JavaScript programming...",
-    content: "# Getting Started with JavaScript - A versatile programming language used for web development. This post covers the fundamentals.",
-    author: { id: "usr_1", name: "Alice Wonderland" },
-    publishedAt: "2024-08-15T10:00:00Z",
-    readTime: "5 min",
-    category: "tech",
-    tags: ["javascript", "beginner", "webdev"],
-    status: "published",
-    views: 1250,
-    likes: 89,
-    seo: { metaDescription: "Learn the basics of JavaScript programming", keywords: ["javascript", "programming", "basics"] }
-  },
-  {
-    id: "post_124",
-    title: "Advanced React Patterns",
-    slug: "advanced-react-patterns",
-    excerpt: "Explore advanced patterns in React development.",
-    content: "# Advanced React Patterns - In this post we explore advanced React development patterns including render props, compound components, and custom hooks.",
-    author: { id: "usr_2", name: "Bob The Builder" },
-    publishedAt: "2024-08-18T14:00:00Z",
-    readTime: "10 min",
-    category: "tech",
-    tags: ["react", "javascript", "frontend", "advanced"],
-    status: "published",
-    views: 980,
-    likes: 120,
-    seo: { metaDescription: "Learn advanced React patterns for scalable applications", keywords: ["react", "patterns", "advanced"] }
-  },
-  {
-    id: "post_125",
-    title: "Understanding APIs",
-    slug: "understanding-apis",
-    excerpt: "A beginner's guide to understanding REST APIs.",
-    content: "What are APIs? How do they work? This post explains it all.",
-    author: { id: "usr_1", name: "Alice Wonderland" },
-    publishedAt: "2024-07-20T10:00:00Z",
-    readTime: "7 min",
-    category: "general",
-    tags: ["api", "basics", "tutorial"],
-    status: "published",
-    views: 2500,
-    likes: 200,
-    seo: { metaDescription: "A simple guide to APIs.", keywords: ["api", "rest", "web services"] }
-  }
-];
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc, // Added for completeness, though PUT currently doesn't return full updated doc
+  updateDoc,
+  deleteDoc,
+  Timestamp,
+} from 'firebase/firestore';
 
 interface Params {
   slug: string;
 }
 
+// Helper function to convert Firestore Timestamps in an object
+const convertTimestamps = (data: any) => {
+  const convertedData = { ...data };
+  for (const key in convertedData) {
+    if (convertedData[key] instanceof Timestamp) {
+      convertedData[key] = (convertedData[key] as Timestamp).toDate().toISOString();
+    } else if (typeof convertedData[key] === 'object' && convertedData[key] !== null) {
+      // Simple conversion: does not handle nested Timestamps within objects or arrays.
+      // If your schema has deeper Timestamps, enhance this function.
+    }
+  }
+  return convertedData;
+};
+
+// Helper function to find a post document by slug and return its snapshot
+async function getPostSnapshotBySlug(slug: string) {
+  const postsCol = collection(db, 'posts');
+  const q = query(postsCol, where('slug', '==', slug));
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) {
+    return null; // Indicates post not found
+  }
+  // Assuming slug is unique, so there should be at most one document.
+  return querySnapshot.docs[0];
+}
+
 // GET /api/posts/{slug} - Get single post by slug
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   const { slug } = params;
-  const post = mockPosts.find(p => p.slug === slug);
 
-  if (post) {
-    // Return full post details
-    return NextResponse.json(post);
-  } else {
-    return NextResponse.json({ error: "Post not found" }, { status: 404 });
+  try {
+    const postDocSnapshot = await getPostSnapshotBySlug(slug);
+
+    if (!postDocSnapshot) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    const postData = convertTimestamps(postDocSnapshot.data());
+    // Include the document ID along with other post data
+    return NextResponse.json({ id: postDocSnapshot.id, ...postData });
+
+  } catch (error) {
+    console.error(`Error fetching post by slug "${slug}":`, error);
+    return NextResponse.json({
+      error: 'Error fetching post',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
 
-// PUT /api/posts/{slug} - Update a post by slug (Example implementation)
+// PUT /api/posts/{slug} - Update a post by slug
 export async function PUT(request: NextRequest, { params }: { params: Params }) {
-    const { slug } = params;
-    try {
-        const body = await request.json();
-        const postIndex = mockPosts.findIndex(p => p.slug === slug);
+  const { slug } = params;
 
-        if (postIndex === -1) {
-            return NextResponse.json({ error: "Post not found" }, { status: 404 });
-        }
+  try {
+    const postDocSnapshot = await getPostSnapshotBySlug(slug);
 
-        // Merge updates, ensuring slug and id are not changed from body
-        const { id, slug: bodySlug, ...updates } = body;
-        mockPosts[postIndex] = { ...mockPosts[postIndex], ...updates, updatedAt: new Date().toISOString() };
-        
-        return NextResponse.json(mockPosts[postIndex]);
-    } catch (error) {
-        return NextResponse.json({ error: "Invalid request body or error updating post" }, { status: 400 });
+    if (!postDocSnapshot) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
+
+    const body = await request.json();
+    // Exclude fields that should not be changed via this PUT method directly
+    const {
+      id: bodyId,
+      slug: bodySlug, // Slug should not be changed once created usually
+      author: bodyAuthor, // Author should likely be immutable or handled by a separate process
+      createdAt: bodyCreatedAt, // Creation timestamp is immutable
+      ...updatePayload
+    } = body;
+
+    const postRef = doc(db, 'posts', postDocSnapshot.id);
+    await updateDoc(postRef, {
+      ...updatePayload, // Apply the filtered updates
+      updatedAt: Timestamp.now(), // Always set/update the updatedAt timestamp
+    });
+
+    // Optionally, fetch and return the updated document
+    // const updatedDoc = await getDoc(postRef);
+    // const updatedData = convertTimestamps(updatedDoc.data());
+    // return NextResponse.json({ id: updatedDoc.id, ...updatedData });
+
+    return NextResponse.json({ message: 'Post updated successfully', id: postDocSnapshot.id });
+
+  } catch (error) {
+    console.error(`Error updating post by slug "${slug}":`, error);
+    if (error instanceof SyntaxError) { // Check for invalid JSON
+        return NextResponse.json({ error: "Invalid JSON in request body", details: error.message }, { status: 400 });
+    }
+    return NextResponse.json({
+      error: 'Error updating post',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
+  }
 }
 
-// DELETE /api/posts/{slug} - Delete a post by slug (Example implementation)
+// DELETE /api/posts/{slug} - Delete a post by slug
 export async function DELETE(request: NextRequest, { params }: { params: Params }) {
-    const { slug } = params;
-    const postIndex = mockPosts.findIndex(p => p.slug === slug);
+  const { slug } = params;
 
-    if (postIndex === -1) {
-        return NextResponse.json({ error: "Post not found" }, { status: 404 });
+  try {
+    const postDocSnapshot = await getPostSnapshotBySlug(slug);
+
+    if (!postDocSnapshot) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    const deletedPost = mockPosts.splice(postIndex, 1);
-    return NextResponse.json({ message: `Post "${deletedPost[0].title}" deleted successfully.`, timestamp: new Date().toISOString() });
+    const postTitle = postDocSnapshot.data().title || "Untitled"; // For a more informative message
+    const postRef = doc(db, 'posts', postDocSnapshot.id);
+    await deleteDoc(postRef);
+
+    return NextResponse.json({ message: `Post "${postTitle}" (slug: ${slug}) deleted successfully.` });
+
+  } catch (error) {
+    console.error(`Error deleting post by slug "${slug}":`, error);
+    return NextResponse.json({
+      error: 'Error deleting post',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
+  }
 }
-    
