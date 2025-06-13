@@ -79,14 +79,30 @@ export async function GET(request: NextRequest) {
 // POST /api/posts - Create a new blog post
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { title, content, excerpt, categoryId, tags } = body;
+    // --- Start of temporary hardcoded test ---
+    try {
+      console.log("Attempting hardcoded Firestore write to 'test_posts'...");
+      const hardcodedData = {
+        testTitle: "Hardcoded Test Post",
+        testContent: "This is a test document to verify basic Firestore connectivity.",
+        testDate: Timestamp.fromDate(new Date()),
+        fixedTestValue: "固定値テスト" // Added a value with non-ASCII characters
+      };
+      const hardcodedRef = await addDoc(collection(db, 'test_posts'), hardcodedData);
+      console.log("Hardcoded test document successfully written with ID: ", hardcodedRef.id, "Data:", hardcodedData);
+    } catch (hcError) {
+      console.error("!!! Hardcoded Firestore write FAILED:", hcError);
+    }
+    // --- End of temporary hardcoded test ---
 
-    if (!title || !content || !categoryId) {
-      return NextResponse.json({ error: "Title, content, and categoryId are required" }, { status: 400 });
+    const body = await request.json();
+    const { title, content, excerpt, categoryId, tags } = body; // 'excerpt', 'categoryId', 'tags' are unused with simplified newPost but keep for body structure consistency
+
+    if (!title || !content ) { // categoryId temporarily removed from this check due to simplified newPost
+      return NextResponse.json({ error: "Title and content are required" }, { status: 400 });
     }
 
-    const slug = title.toLowerCase()
+    let slug = title.toLowerCase()
       .trim()
       .replace(/\s+/g, '-')        // Replace spaces with -
       .replace(/[^\w-]+/g, '')     // Remove all non-word chars
@@ -94,15 +110,28 @@ export async function POST(request: NextRequest) {
       .replace(/^-+/, '')          // Trim - from start of text
       .replace(/-+$/, '');         // Trim - from end of text
 
+    if (!slug) {
+      console.warn("Generated slug was empty for title:", title, ". Using fallback slug.");
+      slug = `post-${Date.now()}`;
+    }
+
     // Temporarily simplified newPost object for debugging
     const newPost = {
       title: title || "Default Title", // Ensure title is not undefined during this test
-      slug: slug, // slug is generated just before this
+      slug: slug, // slug is now guaranteed to have a value
       content: content || "Default Content", // Ensure content is not undefined during this test
       createdAt: Timestamp.fromDate(new Date()),
       status: "draft"
       // All other fields (excerpt, author, categoryId, tags, views, likes, updatedAt, publishedAt) are temporarily removed for this test.
     };
+
+    console.log("--- Attempting to save dynamic post ---");
+    console.log("Title for Firestore:", newPost.title, "(Type:", typeof newPost.title, ")");
+    console.log("Slug for Firestore:", newPost.slug, "(Type:", typeof newPost.slug, ")");
+    console.log("Content for Firestore:", newPost.content, "(Type:", typeof newPost.content, ")");
+    console.log("CreatedAt for Firestore:", newPost.createdAt, "(Type:", typeof newPost.createdAt, ")");
+    console.log("Status for Firestore:", newPost.status, "(Type:", typeof newPost.status, ")");
+    console.log("Full newPost object for Firestore:", newPost);
 
     const docRef = await addDoc(collection(db, 'posts'), newPost);
 
@@ -114,11 +143,11 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
 
   } catch (error) {
-    console.error("Error creating post:", error);
+    console.error("!!! Error creating dynamic post in Firestore:", error);
     // Check if the error is due to request parsing
     if (error instanceof SyntaxError && error.message.includes('JSON')) {
         return NextResponse.json({ error: "Invalid JSON in request body", details: error.message }, { status: 400 });
     }
-    return NextResponse.json({ error: "Error creating post", details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+    return NextResponse.json({ error: "Error creating post", details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
