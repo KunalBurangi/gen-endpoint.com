@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       slug: slug,
       content: content,
       excerpt: excerpt || (content && content.length > 150 ? content.substring(0, 150) + "..." : content || ""), // Ensure content is defined for substring
-      author: { name: "Placeholder User" }, // Placeholder, to match frontend expectations. Consider adding id later.
+      author: { name: "Kunal Burangi" }, // Placeholder, to match frontend expectations. Consider adding id later.
       categoryId: categoryId, // categoryId is validated as required
       tags: Array.isArray(tags) ? tags : (tags ? String(tags).split(',').map(t => t.trim()).filter(t => t) : []), // Ensure tags is an array
       status: "draft", // Default status
