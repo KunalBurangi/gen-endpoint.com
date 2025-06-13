@@ -94,29 +94,23 @@ export async function POST(request: NextRequest) {
       .replace(/^-+/, '')          // Trim - from start of text
       .replace(/-+$/, '');         // Trim - from end of text
 
-    const newPostData = {
-      title,
-      slug,
-      content,
-      excerpt: excerpt || content.substring(0, 120) + (content.length > 120 ? "..." : ""),
-      author: { id: "user_placeholder_id", name: "Placeholder User" }, // Replace with actual user later
-      categoryId, // Already validated as present
-      tags: Array.isArray(tags) ? tags : (tags ? (tags as string).split(',').map(t => t.trim()).filter(t => t) : []),
-      status: "published", // Or 'draft' by default
-      views: 0,
-      likes: 0,
+    // Temporarily simplified newPost object for debugging
+    const newPost = {
+      title: title || "Default Title", // Ensure title is not undefined during this test
+      slug: slug, // slug is generated just before this
+      content: content || "Default Content", // Ensure content is not undefined during this test
       createdAt: Timestamp.fromDate(new Date()),
-      updatedAt: Timestamp.fromDate(new Date()),
-      publishedAt: Timestamp.fromDate(new Date()), // Assuming immediate publish
+      status: "draft"
+      // All other fields (excerpt, author, categoryId, tags, views, likes, updatedAt, publishedAt) are temporarily removed for this test.
     };
 
-    const docRef = await addDoc(collection(db, 'posts'), newPostData);
+    const docRef = await addDoc(collection(db, 'posts'), newPost);
 
     return NextResponse.json({
       id: docRef.id,
-      slug: newPostData.slug,
-      status: newPostData.status,
-      createdAt: (newPostData.createdAt as Timestamp).toDate().toISOString(),
+      slug: newPost.slug,
+      status: newPost.status,
+      createdAt: (newPost.createdAt as Timestamp).toDate().toISOString(),
     }, { status: 201 });
 
   } catch (error) {
