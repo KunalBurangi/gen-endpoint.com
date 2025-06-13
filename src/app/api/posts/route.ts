@@ -1,189 +1,153 @@
-
 import { type NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/firebase';
+import {
+  collection,
+  addDoc,
+  getDocs,
+  Timestamp,
+  query,
+  orderBy,
+  limit as firestoreLimit,
+  where
+} from 'firebase/firestore';
 
-// Mock data for blog posts (in a real app, this would come from a database or CMS)
-const mockPosts = [
-  {
-    id: "post_123",
-    title: "Getting Started with JavaScript",
-    slug: "getting-started-javascript",
-    excerpt: "Learn the basics of JavaScript programming...",
-    content: "# Getting Started with JavaScript - A versatile programming language used for web development. This post covers the fundamentals.",
-    author: { id: "usr_1", name: "Alice Wonderland" },
-    publishedAt: "2024-08-15T10:00:00Z",
-    readTime: "5 min",
-    category: "tech",
-    tags: ["javascript", "beginner", "webdev"],
-    status: "published",
-    views: 1250,
-    likes: 89,
-    seo: { metaDescription: "Learn the basics of JavaScript programming", keywords: ["javascript", "programming", "basics"] }
-  },
-  {
-    id: "post_124",
-    title: "Advanced React Patterns",
-    slug: "advanced-react-patterns",
-    excerpt: "Explore advanced patterns in React development.",
-    content: "# Advanced React Patterns - In this post we explore advanced React development patterns including render props, compound components, and custom hooks.",
-    author: { id: "usr_2", name: "Bob The Builder" },
-    publishedAt: "2024-08-18T14:00:00Z",
-    readTime: "10 min",
-    category: "tech",
-    tags: ["react", "javascript", "frontend", "advanced"],
-    status: "published",
-    views: 980,
-    likes: 120,
-    seo: { metaDescription: "Learn advanced React patterns for scalable applications", keywords: ["react", "patterns", "advanced"] }
-  },
-  {
-    id: "post_125",
-    title: "Understanding APIs",
-    slug: "understanding-apis",
-    excerpt: "A beginner's guide to understanding REST APIs.",
-    content: "What are APIs? How do they work? This post explains it all.",
-    author: { id: "usr_1", name: "Alice Wonderland" },
-    publishedAt: "2024-07-20T10:00:00Z",
-    readTime: "7 min",
-    category: "general",
-    tags: ["api", "basics", "tutorial"],
-    status: "published",
-    views: 2500,
-    likes: 200,
-    seo: { metaDescription: "A simple guide to APIs.", keywords: ["api", "rest", "web services"] }
+// Helper function to convert Firestore Timestamps
+const convertTimestamps = (data: any) => {
+  const converted = { ...data };
+  for (const key in converted) {
+    if (converted[key] instanceof Timestamp) {
+      converted[key] = (converted[key] as Timestamp).toDate().toISOString();
+    }
   }
-];
-
-const mockCategories = [
-  { id: "cat_1", name: "Technology", slug: "tech", postCount: 2 },
-  { id: "cat_2", name: "Design", slug: "design", postCount: 0 },
-  { id: "cat_3", name: "General", slug: "general", postCount: 1 }
-];
-
-const mockTags = [
-  { name: "javascript", count: 2 },
-  { name: "react", count: 1 },
-  { name: "api", count: 1 },
-  { name: "beginner", count: 1 },
-];
-
+  return converted;
+};
 
 // GET /api/posts - List blog posts with filtering and pagination
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const status = searchParams.get('status');
-  const categorySlug = searchParams.get('category');
-  const searchQuery = searchParams.get('search');
+  const categorySlug = searchParams.get('category'); // Frontend sends categoryId as 'category'
+  const tag = searchParams.get('tag');
   const page = parseInt(searchParams.get('page') || '1', 10);
-  const limit = parseInt(searchParams.get('limit') || '10', 10);
+  const postsLimit = parseInt(searchParams.get('limit') || '10', 10);
 
-  let filteredPosts = [...mockPosts];
+  try {
+    const postsCol = collection(db, 'posts');
+    const queryConstraints = [];
 
-  if (status) {
-    filteredPosts = filteredPosts.filter(post => post.status === status);
-  }
-  if (categorySlug) {
-    filteredPosts = filteredPosts.filter(post => post.category === categorySlug);
-  }
-  if (searchQuery) {
-    const query = searchQuery.toLowerCase();
-    filteredPosts = filteredPosts.filter(post =>
-      post.title.toLowerCase().includes(query) ||
-      post.excerpt.toLowerCase().includes(query) ||
-      post.tags.some(tag => tag.toLowerCase().includes(query))
-    );
-  }
-
-  const totalPosts = filteredPosts.length;
-  const paginatedPosts = filteredPosts.slice((page - 1) * limit, page * limit);
-
-  return NextResponse.json({
-    posts: paginatedPosts.map(p => ({
-      id: p.id,
-      title: p.title,
-      slug: p.slug,
-      excerpt: p.excerpt,
-      author: p.author,
-      publishedAt: p.publishedAt,
-      readTime: p.readTime,
-      category: p.category,
-      tags: p.tags
-    })),
-    pagination: {
-      page,
-      limit,
-      total: totalPosts,
-      pages: Math.ceil(totalPosts / limit)
+    if (status) {
+      queryConstraints.push(where('status', '==', status));
     }
-  });
+    if (categorySlug) {
+      // Assuming categoryId is the field storing the category identifier in Firestore
+      queryConstraints.push(where('categoryId', '==', categorySlug));
+    }
+    if (tag) {
+      queryConstraints.push(where('tags', 'array-contains', tag));
+    }
+
+    // Construct the query with all constraints
+    let q = query(postsCol, orderBy('createdAt', 'desc'));
+    if (queryConstraints.length > 0) {
+      // Apply where filters after orderBy on the main sort field
+      q = query(postsCol, ...queryConstraints, orderBy('createdAt', 'desc'));
+    }
+    // Apply limit last
+    q = query(q, firestoreLimit(postsLimit));
+
+    const postSnapshot = await getDocs(q);
+    const posts = postSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...convertTimestamps(doc.data()),
+    }));
+
+    return NextResponse.json({
+      posts: posts,
+      pagination: {
+        page: page,
+        limit: postsLimit,
+        fetchedCount: posts.length,
+      }
+    });
+
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    return NextResponse.json({ error: "Error fetching posts", details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+  }
 }
 
 // POST /api/posts - Create a new blog post
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { title, content, excerpt, categoryId, tags, seo } = body;
+    // Hardcoded write test removed.
 
-    if (!title || !content) {
-      return NextResponse.json({ error: "Title and content are required" }, { status: 400 });
+    const body = await request.json();
+    // Ensure all expected fields are destructured from the body
+    const { title, content, excerpt, categoryId, tags } = body;
+
+    if (!title || !content || !categoryId) {
+      return NextResponse.json({ error: "Title, content, and categoryId are required" }, { status: 400 });
     }
 
+    let slug = title.toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')        // Replace spaces with -
+      .replace(/[^\w-]+/g, '')     // Remove all non-word chars
+      .replace(/--+/g, '-')        // Replace multiple - with single -
+      .replace(/^-+/, '')          // Trim - from start of text
+      .replace(/-+$/, '');         // Trim - from end of text
+
+    if (!slug) {
+      console.warn("Generated slug was empty for title:", title, ". Using fallback slug.");
+      slug = `post-${Date.now()}`;
+    }
+
+    // Restored full newPost object
     const newPost = {
-      id: `post_${Math.random().toString(36).substring(2, 9)}`,
-      title,
-      slug: title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
-      content,
-      excerpt: excerpt || content.substring(0, 150) + "...",
-      author: { id: "usr_mock", name: "Mock User" }, // In a real app, get authenticated user
-      publishedAt: null, // Or new Date().toISOString() if published immediately
-      readTime: Math.ceil(content.split(/\s+/).length / 200) + " min", // Approximate read time
-      category: categoryId || "general", // Default category
-      tags: tags || [],
+      title: title,
+      slug: slug,
+      content: content,
+      excerpt: excerpt || (content && content.length > 150 ? content.substring(0, 150) + "..." : content || ""), // Ensure content is defined for substring
+      author: { name: "Kunal Burangi" }, // Placeholder, to match frontend expectations. Consider adding id later.
+      categoryId: categoryId, // categoryId is validated as required
+      tags: Array.isArray(tags) ? tags : (tags ? String(tags).split(',').map(t => t.trim()).filter(t => t) : []), // Ensure tags is an array
       status: "draft", // Default status
       views: 0,
       likes: 0,
-      seo: seo || { metaDescription: excerpt || title, keywords: tags || [] },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: Timestamp.fromDate(new Date()),
+      updatedAt: Timestamp.fromDate(new Date()), // For new posts, updatedAt is same as createdAt
+      publishedAt: null // Set to null if not published immediately, or Timestamp.fromDate(new Date()) for immediate publish
     };
 
-    mockPosts.push(newPost); // Add to mock data store
+    console.log("--- Attempting to save full dynamic post ---");
+    console.log("Title:", newPost.title, typeof newPost.title);
+    console.log("Slug:", newPost.slug, typeof newPost.slug);
+    console.log("Content:", newPost.content, typeof newPost.content); // Be mindful of logging very long content
+    console.log("Excerpt:", newPost.excerpt, typeof newPost.excerpt);
+    console.log("Author:", newPost.author, typeof newPost.author);
+    console.log("CategoryId:", newPost.categoryId, typeof newPost.categoryId);
+    console.log("Tags:", newPost.tags, typeof newPost.tags);
+    console.log("Status:", newPost.status, typeof newPost.status);
+    console.log("CreatedAt:", newPost.createdAt, typeof newPost.createdAt);
+    console.log("UpdatedAt:", newPost.updatedAt, typeof newPost.updatedAt);
+    console.log("PublishedAt:", newPost.publishedAt, typeof newPost.publishedAt);
+    console.log("Full newPost object for Firestore:", newPost);
+
+    const docRef = await addDoc(collection(db, 'posts'), newPost);
 
     return NextResponse.json({
-      id: newPost.id,
-      title: newPost.title,
+      id: docRef.id,
       slug: newPost.slug,
       status: newPost.status,
-      createdAt: newPost.createdAt
+      createdAt: (newPost.createdAt as Timestamp).toDate().toISOString(), // Already a Timestamp, safe to convert
     }, { status: 201 });
 
   } catch (error) {
-    return NextResponse.json({ error: "Invalid request body or error creating post" }, { status: 400 });
+    console.error("!!! Error creating dynamic post in Firestore:", error);
+    // Check if the error is due to request parsing
+    if (error instanceof SyntaxError && error.message.includes('JSON')) {
+        return NextResponse.json({ error: "Invalid JSON in request body", details: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Error creating post", details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
-
-// GET /api/posts/{slug} - This would typically be in a [slug]/route.ts or similar
-// For simplicity, if your API definition implied this under /api/posts, you might handle it
-// with query params or reconsider the route structure.
-// The provided data/apis.ts has /api/posts/{slug} so we will add a basic handler for it
-// Note: This is a simplified way for a flat /api/posts route.
-// Ideally /api/posts/[slug]/route.ts would be a separate file.
-// This is a common way to handle GET by slug or ID on the same base path IF NOT using Next.js dynamic segments for API.
-// However, for Next.js APIs, the standard is different files for different dynamic segments.
-// For the purpose of matching the existing apis.ts, and assuming the user wants to test
-// /api/posts/some-slug directly, we will add a check for a 'slug' query parameter.
-// A more robust solution is a separate dynamic route.
-// To actually support `/api/posts/some-slug`, you'd need `src/app/api/posts/[slug]/route.ts`.
-// The current GET handles `/api/posts?slug=some-slug`.
-// The `data/apis.ts` defines `GET /api/posts/{slug}` for the blog.
-// Let's make the GET more specific to the `apis.ts` definition for the single post by slug.
-// This will require a separate route file for the list of posts.
-
-// To properly fix this, we'd need:
-// 1. /api/posts/route.ts for GET (list) and POST (create)
-// 2. /api/posts/[slug]/route.ts for GET (single by slug), PUT (update), DELETE (delete)
-
-// For now, I will just make sure the main /api/posts route (this file) handles listing and creation.
-// The single post, categories, etc. are defined as separate endpoints in apis.ts for "blog-api",
-// which implies they would be separate route files.
-// The user error was for /api/posts?status=... which is a GET list, so the GET above is correct.
-    
