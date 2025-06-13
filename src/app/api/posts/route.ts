@@ -79,27 +79,14 @@ export async function GET(request: NextRequest) {
 // POST /api/posts - Create a new blog post
 export async function POST(request: NextRequest) {
   try {
-    // --- Start of temporary hardcoded test ---
-    try {
-      console.log("Attempting hardcoded Firestore write to 'test_posts'...");
-      const hardcodedData = {
-        testTitle: "Hardcoded Test Post",
-        testContent: "This is a test document to verify basic Firestore connectivity.",
-        testDate: Timestamp.fromDate(new Date()),
-        fixedTestValue: "固定値テスト" // Added a value with non-ASCII characters
-      };
-      const hardcodedRef = await addDoc(collection(db, 'test_posts'), hardcodedData);
-      console.log("Hardcoded test document successfully written with ID: ", hardcodedRef.id, "Data:", hardcodedData);
-    } catch (hcError) {
-      console.error("!!! Hardcoded Firestore write FAILED:", hcError);
-    }
-    // --- End of temporary hardcoded test ---
+    // Hardcoded write test removed.
 
     const body = await request.json();
-    const { title, content, excerpt, categoryId, tags } = body; // 'excerpt', 'categoryId', 'tags' are unused with simplified newPost but keep for body structure consistency
+    // Ensure all expected fields are destructured from the body
+    const { title, content, excerpt, categoryId, tags } = body;
 
-    if (!title || !content ) { // categoryId temporarily removed from this check due to simplified newPost
-      return NextResponse.json({ error: "Title and content are required" }, { status: 400 });
+    if (!title || !content || !categoryId) {
+      return NextResponse.json({ error: "Title, content, and categoryId are required" }, { status: 400 });
     }
 
     let slug = title.toLowerCase()
@@ -115,22 +102,35 @@ export async function POST(request: NextRequest) {
       slug = `post-${Date.now()}`;
     }
 
-    // Temporarily simplified newPost object for debugging
+    // Restored full newPost object
     const newPost = {
-      title: title || "Default Title", // Ensure title is not undefined during this test
-      slug: slug, // slug is now guaranteed to have a value
-      content: content || "Default Content", // Ensure content is not undefined during this test
+      title: title,
+      slug: slug,
+      content: content,
+      excerpt: excerpt || (content && content.length > 150 ? content.substring(0, 150) + "..." : content || ""), // Ensure content is defined for substring
+      author: { name: "Placeholder User" }, // Placeholder, to match frontend expectations. Consider adding id later.
+      categoryId: categoryId, // categoryId is validated as required
+      tags: Array.isArray(tags) ? tags : (tags ? String(tags).split(',').map(t => t.trim()).filter(t => t) : []), // Ensure tags is an array
+      status: "draft", // Default status
+      views: 0,
+      likes: 0,
       createdAt: Timestamp.fromDate(new Date()),
-      status: "draft"
-      // All other fields (excerpt, author, categoryId, tags, views, likes, updatedAt, publishedAt) are temporarily removed for this test.
+      updatedAt: Timestamp.fromDate(new Date()), // For new posts, updatedAt is same as createdAt
+      publishedAt: null // Set to null if not published immediately, or Timestamp.fromDate(new Date()) for immediate publish
     };
 
-    console.log("--- Attempting to save dynamic post ---");
-    console.log("Title for Firestore:", newPost.title, "(Type:", typeof newPost.title, ")");
-    console.log("Slug for Firestore:", newPost.slug, "(Type:", typeof newPost.slug, ")");
-    console.log("Content for Firestore:", newPost.content, "(Type:", typeof newPost.content, ")");
-    console.log("CreatedAt for Firestore:", newPost.createdAt, "(Type:", typeof newPost.createdAt, ")");
-    console.log("Status for Firestore:", newPost.status, "(Type:", typeof newPost.status, ")");
+    console.log("--- Attempting to save full dynamic post ---");
+    console.log("Title:", newPost.title, typeof newPost.title);
+    console.log("Slug:", newPost.slug, typeof newPost.slug);
+    console.log("Content:", newPost.content, typeof newPost.content); // Be mindful of logging very long content
+    console.log("Excerpt:", newPost.excerpt, typeof newPost.excerpt);
+    console.log("Author:", newPost.author, typeof newPost.author);
+    console.log("CategoryId:", newPost.categoryId, typeof newPost.categoryId);
+    console.log("Tags:", newPost.tags, typeof newPost.tags);
+    console.log("Status:", newPost.status, typeof newPost.status);
+    console.log("CreatedAt:", newPost.createdAt, typeof newPost.createdAt);
+    console.log("UpdatedAt:", newPost.updatedAt, typeof newPost.updatedAt);
+    console.log("PublishedAt:", newPost.publishedAt, typeof newPost.publishedAt);
     console.log("Full newPost object for Firestore:", newPost);
 
     const docRef = await addDoc(collection(db, 'posts'), newPost);
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
       id: docRef.id,
       slug: newPost.slug,
       status: newPost.status,
-      createdAt: (newPost.createdAt as Timestamp).toDate().toISOString(),
+      createdAt: (newPost.createdAt as Timestamp).toDate().toISOString(), // Already a Timestamp, safe to convert
     }, { status: 201 });
 
   } catch (error) {
