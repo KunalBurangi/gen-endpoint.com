@@ -1,0 +1,15 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write access for testing - you should restrict this in production
+    match /{document=**} {
+      allow read, write: if true;
+    }
+    
+    // More secure rule for specific collections (uncomment when ready):
+    // match /test_posts/{postId} {
+    //   allow read, write: if request.auth != null;
+    // }
+  }
+}
