@@ -22,6 +22,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="ecee2b58bf6609c469632272d0e3ee557908ce0d" content="ecee2b58bf6609c469632272d0e3ee557908ce0d" />
+        <meta name="referrer" content="no-referrer-when-downgrade" />
         <link rel="icon" type="image/svg+xml" href={faviconHref} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
