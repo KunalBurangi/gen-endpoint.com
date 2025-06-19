@@ -15,6 +15,8 @@ interface Post {
     name: string;
   };
   publishedAt: string;
+  views?: number; // Added views
+  likes?: number; // Added likes
 }
 
 export default function BlogPostPage() {
@@ -24,6 +26,8 @@ export default function BlogPostPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // State for optimistic UI update for likes
+  const [currentLikes, setCurrentLikes] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     if (!slug) {
@@ -51,6 +55,7 @@ export default function BlogPostPage() {
         // Assuming a 200 OK means valid postData.
         // If postData could be null/empty on 200, further checks might be needed here.
         setPost(postData);
+        setCurrentLikes(postData.likes); // Initialize currentLikes
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
       } finally {
@@ -107,6 +112,39 @@ export default function BlogPostPage() {
     );
   }
 
+  const handleLike = async () => {
+    if (!post) return;
+
+    // Optimistic UI update
+    setCurrentLikes((prevLikes) => (prevLikes !== undefined ? prevLikes + 1 : 1));
+
+    try {
+      const response = await fetch(`/api/posts/${post.slug}`, { // Corrected endpoint
+        method: 'PATCH',
+      });
+
+      if (!response.ok) {
+        // Revert optimistic update on failure
+        setCurrentLikes((prevLikes) => (prevLikes !== undefined ? prevLikes - 1 : 0));
+        console.error('Failed to like the post:', response.statusText);
+        // Optionally, show an error message to the user
+        return;
+      }
+
+      const updatedPost = await response.json();
+      // Update with actual likes from server to ensure consistency
+      setCurrentLikes(updatedPost.likes);
+      // Also update the main post state if you want other parts of the component to react
+      // setPost(prevPost => prevPost ? { ...prevPost, likes: updatedPost.likes } : null);
+
+    } catch (err) {
+      // Revert optimistic update on failure
+      setCurrentLikes((prevLikes) => (prevLikes !== undefined ? prevLikes - 1 : 0));
+      console.error('Error liking the post:', err);
+      // Optionally, show an error message to the user
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       <Link href="/blog" className="text-blue-500 hover:underline mb-8 block">
@@ -118,7 +156,25 @@ export default function BlogPostPage() {
           <span>By {post.author.name}</span>
           <span className="mx-2">|</span>
           <span>Published on {formatDate(post.publishedAt)}</span>
+          {post.views !== undefined && (
+            <>
+              <span className="mx-2">|</span>
+              <span>{post.views} views</span>
+            </>
+          )}
         </div>
+
+        {/* Like button and count */}
+        <div className="my-4 flex items-center">
+          <button
+            onClick={handleLike}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
+          >
+            Like
+          </button>
+          <span>{currentLikes !== undefined ? currentLikes : (post.likes !== undefined ? post.likes : 0)} likes</span>
+        </div>
+
         {/* Markdown content will be rendered here */}
         <div className="prose dark:prose-invert lg:prose-xl max-w-none">
           <ReactMarkdown>{post.content}</ReactMarkdown>

@@ -10,6 +10,7 @@ import {
   updateDoc,
   deleteDoc,
   Timestamp,
+  FieldValue,
 } from 'firebase/firestore';
 
 interface Params {
@@ -54,14 +55,76 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    const postData = convertTimestamps(postDocSnapshot.data());
+    const postData = postDocSnapshot.data();
+    const postId = postDocSnapshot.id;
+
+    // Increment view count
+    const postRef = doc(db, 'posts', postId);
+    try {
+      await updateDoc(postRef, {
+        views: FieldValue.increment(1)
+      });
+      // Update postData to reflect incremented view count for the response
+      // If views field didn't exist, it's now 1. If it did, it's incremented.
+      postData.views = (postData.views || 0) + 1;
+    } catch (updateError) {
+      console.error(`Error updating view count for post "${slug}":`, updateError);
+      // Non-critical error, log it but proceed with returning the post data
+    }
+
+    const responseData = convertTimestamps(postData);
     // Include the document ID along with other post data
-    return NextResponse.json({ id: postDocSnapshot.id, ...postData });
+    return NextResponse.json({ id: postId, ...responseData });
 
   } catch (error) {
     console.error(`Error fetching post by slug "${slug}":`, error);
     return NextResponse.json({
       error: 'Error fetching post',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
+  }
+}
+
+// PATCH /api/posts/{slug} - Like a post (increment likes count)
+export async function PATCH(request: NextRequest, { params }: { params: Params }) {
+  const { slug } = params;
+
+  try {
+    const postDocSnapshot = await getPostSnapshotBySlug(slug);
+
+    if (!postDocSnapshot) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    const postId = postDocSnapshot.id;
+    const postRef = doc(db, 'posts', postId);
+
+    // Atomically increment the likes count
+    await updateDoc(postRef, {
+      likes: FieldValue.increment(1)
+    });
+
+    // Fetch the updated post data to return the new likes count
+    const updatedPostDoc = await getDoc(postRef);
+    if (!updatedPostDoc.exists()) {
+      // This case should ideally not happen if the snapshot existed moments ago
+      return NextResponse.json({ error: 'Post disappeared after update' }, { status: 404 });
+    }
+
+    const updatedPostData = convertTimestamps(updatedPostDoc.data());
+
+    return NextResponse.json({
+      message: 'Post liked successfully',
+      id: postId,
+      likes: updatedPostData.likes, // Return the new likes count
+      // Optionally, return the full updated post data:
+      // ...updatedPostData
+    });
+
+  } catch (error) {
+    console.error(`Error liking post by slug "${slug}":`, error);
+    return NextResponse.json({
+      error: 'Error liking post',
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
