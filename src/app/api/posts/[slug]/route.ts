@@ -1,3 +1,41 @@
+// PATCH /api/posts/{slug} - Increment likes or views
+import { increment } from 'firebase/firestore';
+
+export async function PATCH(request: NextRequest, context: { params: Params }) {
+  const params = await context.params;
+  const { slug } = params;
+  try {
+    const postDocSnapshot = await getPostSnapshotBySlug(slug);
+    if (!postDocSnapshot) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+    const postRef = doc(db, 'posts', postDocSnapshot.id);
+    const body = await request.json();
+    const { likes, views } = body;
+    const updateData: any = {};
+    if (typeof likes === 'number') {
+      updateData.likes = increment(likes);
+    }
+    if (typeof views === 'number') {
+      updateData.views = increment(views);
+    }
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: 'No valid fields to update (likes/views)' }, { status: 400 });
+    }
+    updateData.updatedAt = Timestamp.now();
+    await updateDoc(postRef, updateData);
+    // Optionally, return the updated counts
+    const updatedDoc = await getDoc(postRef);
+    const updatedData = convertTimestamps(updatedDoc.data());
+    return NextResponse.json({ id: updatedDoc.id, ...updatedData });
+  } catch (error) {
+    console.error(`Error patching post by slug "${slug}":`, error);
+    if (error instanceof SyntaxError) {
+      return NextResponse.json({ error: "Invalid JSON in request body", details: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Error updating post', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
+  }
+}
 import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import {
@@ -44,7 +82,8 @@ async function getPostSnapshotBySlug(slug: string) {
 }
 
 // GET /api/posts/{slug} - Get single post by slug
-export async function GET(request: NextRequest, { params }: { params: Params }) {
+export async function GET(request: NextRequest, context: { params: Params }) {
+  const params = await context.params;
   const { slug } = params;
 
   try {
@@ -68,7 +107,8 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
 }
 
 // PUT /api/posts/{slug} - Update a post by slug
-export async function PUT(request: NextRequest, { params }: { params: Params }) {
+export async function PUT(request: NextRequest, context: { params: Params }) {
+  const params = await context.params;
   const { slug } = params;
 
   try {
@@ -114,7 +154,8 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
 }
 
 // DELETE /api/posts/{slug} - Delete a post by slug
-export async function DELETE(request: NextRequest, { params }: { params: Params }) {
+export async function DELETE(request: NextRequest, context: { params: Params }) {
+  const params = await context.params;
   const { slug } = params;
 
   try {
