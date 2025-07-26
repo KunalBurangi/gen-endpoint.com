@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       likes: 0,
       createdAt: Timestamp.fromDate(new Date()),
       updatedAt: Timestamp.fromDate(new Date()), // For new posts, updatedAt is same as createdAt
-      publishedAt: null // Set to null if not published immediately, or Timestamp.fromDate(new Date()) for immediate publish
+      publishedAt: Timestamp.fromDate(new Date()) // Always set publishedAt to now
     };
 
     console.log("--- Attempting to save full dynamic post ---");
