@@ -11,14 +11,24 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+import { isSupported } from "firebase/analytics";
+
 // Initialize Firebase
 let app: FirebaseApp;
 // Ensure Firebase is initialized only once
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
 } else {
   app = getApps()[0]; // Use the existing app
+}
+
+// Initialize Analytics only on the client side
+if (typeof window !== 'undefined') {
+  isSupported().then((supported) => {
+    if (supported) {
+      getAnalytics(app);
+    }
+  });
 }
 
 const db: Firestore = getFirestore(app);
