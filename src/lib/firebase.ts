@@ -1,4 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getAnalytics } from "firebase/analytics";
 import { getFirestore, Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -15,6 +16,7 @@ let app: FirebaseApp;
 // Ensure Firebase is initialized only once
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
 } else {
   app = getApps()[0]; // Use the existing app
 }
