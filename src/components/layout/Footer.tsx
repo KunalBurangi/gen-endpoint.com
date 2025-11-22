@@ -14,6 +14,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export function Footer() {
   const { chaosMode, toggleChaosMode } = useChaos();
@@ -92,9 +100,63 @@ export function Footer() {
                 About Us
               </Link>
             </Button>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2 mt-2">
+                  <Heart className="h-4 w-4 text-pink-500 fill-pink-500" />
+                  <span>Sponsor Project</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Support Gen-Endpoint</DialogTitle>
+                  <DialogDescription>
+                    Choose a method to support the project. Your contribution helps keep the servers running! ❤️
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col items-center justify-center p-4 space-y-6">
+
+                  {/* UPI Section */}
+                  <div className="flex flex-col items-center space-y-2 w-full">
+                    <span className="text-sm font-medium text-muted-foreground">Via UPI (India)</span>
+                    <div className="bg-white p-2 rounded-lg border shadow-sm">
+                      <img
+                        src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=kunal.burangi96@okicici&pn=Kunal%20Burangi&cu=INR"
+                        alt="UPI QR Code"
+                        className="w-32 h-32"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2 text-xs text-muted-foreground bg-muted px-3 py-1 rounded-md">
+                      <span className="font-mono">kunal.burangi96@okicici</span>
+                    </div>
+                  </div>
+
+                  <div className="relative w-full">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">Or</span>
+                    </div>
+                  </div>
+
+                  {/* PayPal Section */}
+                  <div className="flex flex-col items-center space-y-2 w-full">
+                    <span className="text-sm font-medium text-muted-foreground">Via PayPal (International)</span>
+                    <Button className="w-full gap-2" asChild>
+                      <Link href="https://paypal.me/KunalBurangi" target="_blank" rel="noopener noreferrer">
+                        <span>Donate via PayPal</span>
+                      </Link>
+                    </Button>
+                  </div>
+
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
-          {/* Right Side: Empty for balance or future content */}
+          {/* Right Side: Empty for balance */}
           <div className="hidden md:block"></div>
         </div>
       </div>
