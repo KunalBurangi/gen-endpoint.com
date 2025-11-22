@@ -5,6 +5,8 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Toaster } from '@/components/ui/toaster';
 import { Analytics } from "@vercel/analytics/react"
+import { ChaosProvider } from '@/context/ChaosContext';
+import { AdScripts } from '@/components/AdScripts';
 
 
 export const metadata: Metadata = {
@@ -23,9 +25,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
 
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `(function(xwl){
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(xwl){
             var d = document,
                 s = d.createElement('script'),
                 l = d.scripts[d.scripts.length - 1];
@@ -35,8 +37,8 @@ export default function RootLayout({
             s.referrerPolicy = 'no-referrer-when-downgrade';
             l.parentNode.insertBefore(s, l);
           })({})`
-        }}
-      />
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(wxhzk){
@@ -51,7 +53,7 @@ export default function RootLayout({
             })({})`
           }}
         />
-        
+
         <meta name="ecee2b58bf6609c469632272d0e3ee557908ce0d" content="ecee2b58bf6609c469632272d0e3ee557908ce0d" />
         <meta name="referrer" content="no-referrer-when-downgrade" />
         <link rel="icon" type="image/svg+xml" href={faviconHref} />
@@ -65,27 +67,16 @@ export default function RootLayout({
         ></script>
       </head>
       <body className="font-body antialiased flex flex-col min-h-screen" suppressHydrationWarning={true}>
-        <Header />
-        <main className="flex-grow container mx-auto px-4 py-8">
-          {children}
-        </main>
-        <Footer />
-        <Toaster />
+        <ChaosProvider>
+          <Header />
+          <main className="flex-grow container mx-auto px-4 py-8">
+            {children}
+          </main>
+          <Footer />
+          <Toaster />
+        </ChaosProvider>
         <Analytics />
-        <script
-  dangerouslySetInnerHTML={{
-    __html: `(function(pldgla){
-      var d = document,
-          s = d.createElement('script'),
-          l = d.scripts[d.scripts.length - 1];
-      s.settings = pldgla || {};
-      s.src = "//smoggy-construction.com/b.XdVesIdfGvl/0AY/WCcj/Ie/mb9VuWZSUGlnk/P/T/Y/0-MYzBYdwiM/jYAxtUNwj_QZzrNHjuAeyVMDQj";
-      s.async = true;
-      s.referrerPolicy = 'no-referrer-when-downgrade';
-      l.parentNode.insertBefore(s, l);
-    })({})`
-  }}
-/>
+
       </body>
     </html>
   );

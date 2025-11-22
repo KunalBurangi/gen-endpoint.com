@@ -3,8 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GenerateEndpointForm } from "./components/GenerateEndpointForm"; // Renamed
 import { GenerateSchemaForm } from "./components/GenerateSchemaForm";
 import { GenerateJsonForm } from "./components/GenerateJsonForm";
+import { GenerateSdkForm } from "./components/GenerateSdkForm";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Bot, PencilRuler, FileJson, FileInput, HelpCircle, KeyRound } from "lucide-react"; // Added HelpCircle, KeyRound
+import { Bot, PencilRuler, FileJson, FileInput, HelpCircle, KeyRound, Code2 } from "lucide-react"; // Added HelpCircle, KeyRound, Code2
 import { ApiKeyManager } from "./components/ApiKeyManager";
 
 export default function GeneratePage() {
@@ -17,7 +18,7 @@ export default function GeneratePage() {
             <div>
               <CardTitle className="text-3xl font-bold font-headline text-primary">AI-Powered API Tools</CardTitle>
               <CardDescription className="text-lg mt-1">
-                Generate API endpoint code, JSON schemas, and example JSON using AI.
+                Generate API endpoint code, JSON schemas, example JSON, and client SDKs using AI.
               </CardDescription>
             </div>
           </div>
@@ -42,10 +43,10 @@ export default function GeneratePage() {
           <ol className="list-decimal list-inside text-sm space-y-1.5 text-muted-foreground pl-2">
             <li>
               Navigate to the{" "}
-              <a 
-                href="https://aistudio.google.com/app/apikey" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-primary underline hover:text-primary/80 font-medium"
               >
                 Google AI Studio API Key page
@@ -69,7 +70,7 @@ export default function GeneratePage() {
       </Card>
 
       <Tabs defaultValue="generate-endpoint" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6">
           <TabsTrigger value="generate-endpoint">
             <PencilRuler className="h-4 w-4 mr-2" />
             Endpoint from Prompt
@@ -81,7 +82,11 @@ export default function GeneratePage() {
           <TabsTrigger value="generate-json">
             <FileInput className="h-4 w-4 mr-2" />
             JSON from Schema
-            </TabsTrigger>
+          </TabsTrigger>
+          <TabsTrigger value="generate-sdk">
+            <Code2 className="h-4 w-4 mr-2" />
+            Client SDK
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="generate-endpoint">
@@ -117,6 +122,18 @@ export default function GeneratePage() {
               </CardDescription>
             </CardHeader>
             <GenerateJsonForm />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="generate-sdk">
+          <Card>
+            <CardHeader>
+              <CardTitle>Generate Client SDK</CardTitle>
+              <CardDescription>
+                Select an API and programming language to generate a complete client SDK with type safety and documentation.
+              </CardDescription>
+            </CardHeader>
+            <GenerateSdkForm />
           </Card>
         </TabsContent>
       </Tabs>

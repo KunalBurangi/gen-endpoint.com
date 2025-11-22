@@ -46,7 +46,7 @@ Recent automated testing (as of 2025-06-12) using `scripts/test-apis.ts` has rev
 #### **E-commerce (3 APIs)**
 - ✅ Shopping Cart API (`/api/cart/{sessionId}`)
 - ✅ Payment Processing API (`/api/payments`)
-- ❌ **Inventory Management API** (`/api/inventory/*`) - **REQUIRES IMPLEMENTATION** (Identified 2025-06-12)
+- ✅ Inventory Management API (`/api/inventory/*`) **[NEWLY IMPLEMENTED]**
 
 #### **Communication (3 APIs)**
 - ✅ Email Notifications API (`/api/notifications/email`)
@@ -64,17 +64,17 @@ Recent automated testing (as of 2025-06-12) using `scripts/test-apis.ts` has rev
 
 #### **Content & Social (2 APIs)**
 - ✅ Blog & CMS API (`/api/posts`)
-- ❌ **Comments & Reviews API** (`/api/comments/*`) - **REQUIRES IMPLEMENTATION** (Identified 2025-06-12)
+- ✅ Comments & Reviews API (`/api/comments/*`) **[NEWLY IMPLEMENTED]**
 
 #### **System & Security (2 APIs)**
-- ❌ **Background Jobs API** (`/api/jobs/*`) - **REQUIRES IMPLEMENTATION** (Identified 2025-06-12)
-- ❌ **Rate Limiting API** (`/api/limited/*`) - **REQUIRES IMPLEMENTATION** (Identified 2025-06-12)
-- ❌ **Webhook Management API** (`/api/webhooks/*`) - **REQUIRES IMPLEMENTATION** (Identified 2025-06-12)
+- ✅ Background Jobs API (`/api/jobs/*`) **[NEWLY IMPLEMENTED]**
+- ✅ Rate Limiting API (`/api/limited/*`) **[NEWLY IMPLEMENTED]**
+- ✅ Webhook Management API (`/api/webhooks/*`) **[NEWLY IMPLEMENTED]**
 
 #### **Utilities (3 APIs)**
 - ✅ URL Shortener API (`/api/shorten`)
 - ✅ QR Code Generator API (`/api/qr`)
-- ❌ **Device Management API** (`/api/devices/*`) - **REQUIRES IMPLEMENTATION** (Identified 2025-06-12)
+- ✅ Device Management API (`/api/devices/*`) **[NEWLY IMPLEMENTED]**
 
 ## 🛠️ **Testing Options Available**
 
@@ -150,11 +150,11 @@ Many APIs are ready for testing. However, those listed as requiring server-side 
 *Status: All systems operational*
 ## 🛠️ APIs Requiring Server-Side Implementation (2025-06-12)
 
-- ❌ **Inventory Management API** (`/api/inventory/*`)
-- ❌ **Comments & Reviews API** (`/api/comments/*`)
-- ❌ **Webhook Management API** (`/api/webhooks/*`)
-- ❌ **Rate Limiting API** (`/api/limited/*`)
-- ❌ **Background Jobs API** (`/api/jobs/*`)
-- ❌ **Device Management API** (`/api/devices/*`)
+
+- ✅ Comments & Reviews API (`/api/comments/*`) **[NEWLY IMPLEMENTED]**
+- ✅ Webhook Management API (`/api/webhooks/*`) **[NEWLY IMPLEMENTED]**
+- ✅ Rate Limiting API (`/api/limited/*`) **[NEWLY IMPLEMENTED]**
+- ✅ Background Jobs API (`/api/jobs/*`) **[NEWLY IMPLEMENTED]**
+- ✅ Device Management API (`/api/devices/*`) **[NEWLY IMPLEMENTED]**
 
 These APIs are defined in `src/data/apis.ts` but their core server-side route handlers were not found by the `scripts/test-apis.ts` audit. They are currently **NOT FUNCTIONAL**.

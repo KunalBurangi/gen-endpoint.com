@@ -4,25 +4,34 @@
 
 @layer base {
   :root {
-    --background: 220 17% 95%; /* #F0F2F5 Light Gray */
-    --foreground: 224 71% 10%; /* Darker blue/gray for text */
-    --card: 0 0% 100%; /* White */
+    --background: 220 17% 95%;
+    /* #F0F2F5 Light Gray */
+    --foreground: 224 71% 10%;
+    /* Darker blue/gray for text */
+    --card: 0 0% 100%;
+    /* White */
     --card-foreground: 224 71% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 10%;
-    --primary: 217 89% 61%; /* #4285F4 Saturated Blue */
-    --primary-foreground: 210 20% 98%; /* Off-white */
-    --secondary: 220 13% 90%; /* Slightly darker gray */
+    --primary: 217 89% 61%;
+    /* #4285F4 Saturated Blue */
+    --primary-foreground: 210 20% 98%;
+    /* Off-white */
+    --secondary: 220 13% 90%;
+    /* Slightly darker gray */
     --secondary-foreground: 224 71% 10%;
     --muted: 220 13% 90%;
-    --muted-foreground: 220 9% 45%; /* Lighter gray for muted text */
-    --accent: 262 52% 50%; /* #673AB7 Purple */
+    --muted-foreground: 220 9% 45%;
+    /* Lighter gray for muted text */
+    --accent: 262 52% 50%;
+    /* #673AB7 Purple */
     --accent-foreground: 210 20% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 220 13% 88%;
     --input: 220 13% 88%;
-    --ring: 217 89% 61%; /* Primary color for rings */
+    --ring: 217 89% 61%;
+    /* Primary color for rings */
     --radius: 0.5rem;
 
     /* Sidebar specific colors, can be adjusted if sidebar is used extensively */
@@ -43,19 +52,26 @@
   }
 
   .dark {
-    --background: 224 71% 10%; /* Dark blue/gray */
-    --foreground: 210 20% 98%; /* Off-white */
-    --card: 224 71% 12%; /* Slightly lighter dark blue/gray */
+    --background: 224 71% 10%;
+    /* Dark blue/gray */
+    --foreground: 210 20% 98%;
+    /* Off-white */
+    --card: 224 71% 12%;
+    /* Slightly lighter dark blue/gray */
     --card-foreground: 210 20% 98%;
     --popover: 224 71% 12%;
     --popover-foreground: 210 20% 98%;
-    --primary: 217 89% 61%; /* #4285F4 Saturated Blue */
+    --primary: 217 89% 61%;
+    /* #4285F4 Saturated Blue */
     --primary-foreground: 210 20% 98%;
-    --secondary: 220 13% 20%; /* Darker gray */
+    --secondary: 220 13% 20%;
+    /* Darker gray */
     --secondary-foreground: 210 20% 98%;
     --muted: 220 13% 20%;
-    --muted-foreground: 220 9% 65%; /* Lighter gray for muted text */
-    --accent: 262 52% 55%; /* #673AB7 Purple (slightly lighter for dark mode) */
+    --muted-foreground: 220 9% 65%;
+    /* Lighter gray for muted text */
+    --accent: 262 52% 55%;
+    /* #673AB7 Purple (slightly lighter for dark mode) */
     --accent-foreground: 210 20% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
@@ -85,7 +101,14 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@media (width >=1400px) {
+  .container {
+    max-width: unset;
   }
 }

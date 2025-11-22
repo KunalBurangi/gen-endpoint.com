@@ -8,7 +8,7 @@ The Gen-Endpoint project now includes a fully functional file upload API with se
 
 #### 1. **React Upload Test Page** (Recommended)
 ```
-http://localhost:9002/upload-test
+http://localhost:4000/upload-test
 ```
 - Modern drag & drop interface
 - Real-time progress tracking
@@ -18,7 +18,7 @@ http://localhost:9002/upload-test
 
 #### 2. **Simple HTML Form**
 ```
-http://localhost:9002/api/upload?format=html
+http://localhost:4000/api/upload?format=html
 ```
 - Basic HTML form for quick testing
 - Works in any browser
@@ -27,7 +27,7 @@ http://localhost:9002/api/upload?format=html
 
 #### 3. **API Documentation Interface**
 ```
-http://localhost:9002/apis/file-upload-api
+http://localhost:4000/apis/file-upload-api
 ```
 - Interactive file upload in documentation
 - Auto-detects FormData endpoints
@@ -71,7 +71,7 @@ GET /api/files/bulk - Documentation
 
 ### Upload Single File
 ```bash
-curl -X POST -F "files=@document.pdf" http://localhost:9002/api/upload
+curl -X POST -F "files=@document.pdf" http://localhost:4000/api/upload
 ```
 
 ### Upload Multiple Files
@@ -80,23 +80,23 @@ curl -X POST \
   -F "files=@photo.jpg" \
   -F "files=@document.pdf" \
   -F "files=@data.csv" \
-  http://localhost:9002/api/upload
+  http://localhost:4000/api/upload
 ```
 
 ### List Files
 ```bash
-curl "http://localhost:9002/api/files"
-curl "http://localhost:9002/api/files?type=image&limit=5"
+curl "http://localhost:4000/api/files"
+curl "http://localhost:4000/api/files?type=image&limit=5"
 ```
 
 ### Get File Details
 ```bash
-curl "http://localhost:9002/api/files/file_123"
+curl "http://localhost:4000/api/files/file_123"
 ```
 
 ### Download File
 ```bash
-curl -O "http://localhost:9002/api/files/file_123/download"
+curl -O "http://localhost:4000/api/files/file_123/download"
 ```
 
 ### Update File Metadata
@@ -104,12 +104,12 @@ curl -O "http://localhost:9002/api/files/file_123/download"
 curl -X PUT \
   -H "Content-Type: application/json" \
   -d '{"description": "Updated description", "tags": ["important"]}' \
-  http://localhost:9002/api/files/file_123
+  http://localhost:4000/api/files/file_123
 ```
 
 ### Delete File
 ```bash
-curl -X DELETE "http://localhost:9002/api/files/file_123"
+curl -X DELETE "http://localhost:4000/api/files/file_123"
 ```
 
 ## 📋 **Supported File Types**
@@ -133,18 +133,18 @@ curl -X DELETE "http://localhost:9002/api/files/file_123"
 ### Search & Filter
 ```bash
 # Filter by type
-curl "http://localhost:9002/api/files?type=image"
+curl "http://localhost:4000/api/files?type=image"
 
 # Search in names
-curl "http://localhost:9002/api/files?search=document"
+curl "http://localhost:4000/api/files?search=document"
 
 # Sort by size
-curl "http://localhost:9002/api/files?sortBy=size&sortOrder=desc"
+curl "http://localhost:4000/api/files?sortBy=size&sortOrder=desc"
 ```
 
 ### Pagination
 ```bash
-curl "http://localhost:9002/api/files?page=1&limit=5"
+curl "http://localhost:4000/api/files?page=1&limit=5"
 ```
 
 ### Bulk Operations
@@ -153,13 +153,13 @@ curl "http://localhost:9002/api/files?page=1&limit=5"
 curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"operation": "delete", "fileIds": ["file_123", "file_456"]}' \
-  http://localhost:9002/api/files/bulk
+  http://localhost:4000/api/files/bulk
 
 # Delete by filter
 curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"operation": "delete", "filters": {"mimeType": "image/", "olderThan": "2024-08-01"}}' \
-  http://localhost:9002/api/files/bulk
+  http://localhost:4000/api/files/bulk
 ```
 
 ## 🚨 **Troubleshooting**
@@ -187,12 +187,12 @@ curl -X POST \
 
 1. **Test with simple HTML form first**
    ```
-   http://localhost:9002/api/upload?format=html
+   http://localhost:4000/api/upload?format=html
    ```
 
 2. **Check upload endpoint info**
    ```bash
-   curl "http://localhost:9002/api/upload"
+   curl "http://localhost:4000/api/upload"
    ```
 
 3. **Verify server is running**
@@ -269,9 +269,9 @@ curl -X POST \
 
 ## 🔗 **Related Documentation**
 
-- Main documentation: http://localhost:9002/apis/file-upload-api
-- All APIs: http://localhost:9002
-- AI tools: http://localhost:9002/generate
+- Main documentation: http://localhost:4000/apis/file-upload-api
+- All APIs: http://localhost:4000
+- AI tools: http://localhost:4000/generate
 
 ## 📝 **Notes**
 

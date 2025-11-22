@@ -11,7 +11,7 @@ export interface ApiEndpoint {
 export interface ApiDefinition {
   id: string;
   name: string;
-  description:string;
+  description: string;
   category: string;
   documentationUrl: string; // For internal APIs, this can be the path to its detail page
   endpoints: ApiEndpoint[];
@@ -103,11 +103,11 @@ export const publicApis: ApiDefinition[] = [
         description: 'Retrieves a list of users. Supports an optional `limit` query parameter (e.g., `?limit=5`) to control the number of users returned. If no limit is provided, all users are returned (up to the total of 25 mock users).',
         exampleRequest: 'Path: /api/users?limit=5',
         exampleResponse: JSON.stringify([
-          {id: "usr_1", name: "Alice Wonderland", email: "alice@example.com", role: "admin", createdAt: "2024-01-10T10:00:00Z", profile: {"bio": "Curiouser and curiouser!", "avatarUrl": "https://placehold.co/100x100.png"}},
-          {id: "usr_2", name: "Bob The Builder", email: "bob@example.com", role: "editor", createdAt: "2024-01-11T11:00:00Z", profile: {"bio": "Can we fix it?", "avatarUrl": "https://placehold.co/100x100.png"}},
-          {id: "usr_3", name: "Charlie Chaplin", email: "charlie@example.com", role: "viewer", createdAt: "2024-01-12T12:00:00Z", profile: {"bio": "A day without laughter is a day wasted.", "avatarUrl": "https://placehold.co/100x100.png"}},
-          {id: "usr_4", name: "Diana Prince", email: "diana@example.com", role: "admin", createdAt: "2024-01-13T13:00:00Z", profile: {"bio": "Wonder Woman", "avatarUrl": "https://placehold.co/100x100.png"}},
-          {id: "usr_5", name: "Edward Scissorhands", email: "edward@example.com", role: "viewer", createdAt: "2024-01-14T14:00:00Z", profile: {"bio": "I am not complete.", "avatarUrl": "https://placehold.co/100x100.png"}}
+          { id: "usr_1", name: "Alice Wonderland", email: "alice@example.com", role: "admin", createdAt: "2024-01-10T10:00:00Z", profile: { "bio": "Curiouser and curiouser!", "avatarUrl": "https://placehold.co/100x100.png" } },
+          { id: "usr_2", name: "Bob The Builder", email: "bob@example.com", role: "editor", createdAt: "2024-01-11T11:00:00Z", profile: { "bio": "Can we fix it?", "avatarUrl": "https://placehold.co/100x100.png" } },
+          { id: "usr_3", name: "Charlie Chaplin", email: "charlie@example.com", role: "viewer", createdAt: "2024-01-12T12:00:00Z", profile: { "bio": "A day without laughter is a day wasted.", "avatarUrl": "https://placehold.co/100x100.png" } },
+          { id: "usr_4", name: "Diana Prince", email: "diana@example.com", role: "admin", createdAt: "2024-01-13T13:00:00Z", profile: { "bio": "Wonder Woman", "avatarUrl": "https://placehold.co/100x100.png" } },
+          { id: "usr_5", name: "Edward Scissorhands", email: "edward@example.com", role: "viewer", createdAt: "2024-01-14T14:00:00Z", profile: { "bio": "I am not complete.", "avatarUrl": "https://placehold.co/100x100.png" } }
         ], null, 2)
       },
       {
@@ -153,11 +153,11 @@ export const publicApis: ApiDefinition[] = [
         description: 'Retrieves a list of products. Supports optional query parameters for filtering (e.g., `?category=electronics&inStock=true`) and `limit` to control the number of products returned (e.g., `?limit=1`).',
         exampleRequest: 'Path: /api/products?category=Books&limit=1',
         exampleResponse: JSON.stringify([{
-            id: "prod_123", name: "The Pragmatic Programmer", category: "Books", price: 29.99, stock: 150,
-            imageUrl: "https://placehold.co/300x200.png", description: "From journeyman to master.",
-            details: {"pages": 352, "author": "David Thomas, Andrew Hunt"},
-            reviews: [{"rating": 5, "comment": "A must-read!"}],
-            createdAt: "2024-01-10T10:00:00Z"
+          id: "prod_123", name: "The Pragmatic Programmer", category: "Books", price: 29.99, stock: 150,
+          imageUrl: "https://placehold.co/300x200.png", description: "From journeyman to master.",
+          details: { "pages": 352, "author": "David Thomas, Andrew Hunt" },
+          reviews: [{ "rating": 5, "comment": "A must-read!" }],
+          createdAt: "2024-01-10T10:00:00Z"
         }], null, 2)
       },
       {
@@ -165,11 +165,11 @@ export const publicApis: ApiDefinition[] = [
         path: '/api/products/{productId}',
         description: 'Retrieves details for a specific product by ID. Replace {productId} with an ID like `prod_123`.',
         exampleResponse: JSON.stringify({
-            id: "prod_123", name: "The Pragmatic Programmer", category: "Books", price: 29.99, stock: 150,
-            imageUrl: "https://placehold.co/300x200.png", description: "From journeyman to master.",
-            details: {"pages": 352, "author": "David Thomas, Andrew Hunt"},
-            reviews: [{"rating": 5, "comment": "A must-read!"}],
-            createdAt: "2024-01-10T10:00:00Z"
+          id: "prod_123", name: "The Pragmatic Programmer", category: "Books", price: 29.99, stock: 150,
+          imageUrl: "https://placehold.co/300x200.png", description: "From journeyman to master.",
+          details: { "pages": 352, "author": "David Thomas, Andrew Hunt" },
+          reviews: [{ "rating": 5, "comment": "A must-read!" }],
+          createdAt: "2024-01-10T10:00:00Z"
         }, null, 2)
       },
       {
@@ -181,9 +181,9 @@ export const publicApis: ApiDefinition[] = [
           imageUrl: "https://placehold.co/300x200.png", description: "Clicky and comfortable."
         }, null, 2),
         exampleResponse: JSON.stringify({
-            id: "prod_new", name: "Ergonomic Mechanical Keyboard", category: "Electronics", price: 159.99, stock: 50,
-            imageUrl: "https://placehold.co/300x200.png", description: "Clicky and comfortable.",
-            details: {}, reviews: [], createdAt: "2024-08-16T16:00:00Z"
+          id: "prod_new", name: "Ergonomic Mechanical Keyboard", category: "Electronics", price: 159.99, stock: 50,
+          imageUrl: "https://placehold.co/300x200.png", description: "Clicky and comfortable.",
+          details: {}, reviews: [], createdAt: "2024-08-16T16:00:00Z"
         }, null, 2)
       },
       {
@@ -192,9 +192,9 @@ export const publicApis: ApiDefinition[] = [
         description: 'Updates an existing product by ID. Replace {productId} with an ID like `prod_123`.',
         exampleRequest: JSON.stringify({ price: 149.99, stock: 45 }, null, 2),
         exampleResponse: JSON.stringify({
-            id: "prod_123", name: "Ergonomic Mechanical Keyboard", category: "Electronics", price: 149.99, stock: 45,
-            imageUrl: "https://placehold.co/300x200.png", description: "Clicky and comfortable.",
-            createdAt: "2024-01-12T12:00:00Z", updatedAt: "2024-08-16T16:30:00Z"
+          id: "prod_123", name: "Ergonomic Mechanical Keyboard", category: "Electronics", price: 149.99, stock: 45,
+          imageUrl: "https://placehold.co/300x200.png", description: "Clicky and comfortable.",
+          createdAt: "2024-01-12T12:00:00Z", updatedAt: "2024-08-16T16:30:00Z"
         }, null, 2)
       },
       {
@@ -356,7 +356,7 @@ export const publicApis: ApiDefinition[] = [
         exampleRequest: '{\n  "deviceTokens": ["token1", "token2"],\n  "title": "New Message",\n  "body": "You have a new message from Alice",\n  "data": {"messageId": "msg_456", "type": "chat"}\n}',
         exampleResponse: '{\n  "id": "notif_124",\n  "type": "push",\n  "status": "sent",\n  "deliveredTo": 2,\n  "failedDeliveries": 0\n}'
       },
-       {
+      {
         method: 'GET',
         path: '/api/notifications/push',
         description: 'Get push notification history and stats.',
@@ -451,7 +451,7 @@ export const publicApis: ApiDefinition[] = [
         description: 'Get cart contents for session. Creates a new cart if sessionId is new or cart expired. Replace {sessionId} with an ID (e.g., sess_123).',
         exampleResponse: JSON.stringify({
           id: "sess_123", userId: null, items: [
-            { id: "item_abc", productId: "prod_123", name: "Wireless Headphones", priceAtTimeOfAddition: 99.99, quantity: 1, imageUrl: "https://placehold.co/100x100.png", options: {color: "black"}, subtotal: 99.99 }
+            { id: "item_abc", productId: "prod_123", name: "Wireless Headphones", priceAtTimeOfAddition: 99.99, quantity: 1, imageUrl: "https://placehold.co/100x100.png", options: { color: "black" }, subtotal: 99.99 }
           ],
           subtotal: 99.99, tax: 8.00, shipping: 0, discount: 0, total: 107.99,
           createdAt: "2024-08-20T10:00:00Z", updatedAt: "2024-08-20T10:05:00Z", expiresAt: "2024-08-21T10:00:00Z"
@@ -461,10 +461,10 @@ export const publicApis: ApiDefinition[] = [
         method: 'POST',
         path: '/api/cart/{sessionId}/items',
         description: 'Add an item to the cart. Replace {sessionId} with a session ID.',
-        exampleRequest: JSON.stringify({ productId: "prod_456", quantity: 1, options: {format: "paperback"} }, null, 2),
+        exampleRequest: JSON.stringify({ productId: "prod_456", quantity: 1, options: { format: "paperback" } }, null, 2),
         exampleResponse: JSON.stringify({
           success: true,
-          item: { id: "item_xyz", productId: "prod_456", name: "JavaScript Book", priceAtTimeOfAddition: 29.99, quantity: 1, options: {format: "paperback"}, imageUrl: "https://placehold.co/100x100.png", subtotal: 29.99 },
+          item: { id: "item_xyz", productId: "prod_456", name: "JavaScript Book", priceAtTimeOfAddition: 29.99, quantity: 1, options: { format: "paperback" }, imageUrl: "https://placehold.co/100x100.png", subtotal: 29.99 },
           cart: { /* Full cart object */ }
         }, null, 2)
       },
@@ -473,7 +473,7 @@ export const publicApis: ApiDefinition[] = [
         path: '/api/cart/{sessionId}/items',
         description: 'List all items in the specified cart. Replace {sessionId} with a session ID.',
         exampleResponse: JSON.stringify({
-          items: [{ id: "item_abc", productId: "prod_123", name: "Wireless Headphones", priceAtTimeOfAddition: 99.99, quantity: 1, options: {color: "black"}, subtotal: 99.99 }],
+          items: [{ id: "item_abc", productId: "prod_123", name: "Wireless Headphones", priceAtTimeOfAddition: 99.99, quantity: 1, options: { color: "black" }, subtotal: 99.99 }],
           itemCount: 1,
           totals: { subtotal: 99.99, tax: 8.00, shipping: 0, discount: 0, total: 107.99 }
         }, null, 2)
@@ -562,11 +562,11 @@ export const publicApis: ApiDefinition[] = [
             {
               id: "pay_xyz123", orderId: "order_123", customerId: "cust_abc", amount: 99.99, currency: "USD",
               status: "succeeded", createdAt: "2024-08-20T12:00:00Z", updatedAt: "2024-08-20T12:00:01Z",
-              paymentMethod: { type: "card", brand: "Visa", last4: "4242"},
+              paymentMethod: { type: "card", brand: "Visa", last4: "4242" },
               paymentGatewayDetails: { gatewayTransactionId: "gw_pay_xyz123", responseCode: "00", message: "Payment successful" }
             }
           ],
-          pagination: {"page": 1, "limit": 10, "total": 1, "pages": 1}
+          pagination: { "page": 1, "limit": 10, "total": 1, "pages": 1 }
         }, null, 2)
       }
     ]
@@ -581,8 +581,8 @@ export const publicApis: ApiDefinition[] = [
     endpoints: [
       {
         method: 'GET',
-        path: '/api/inventory/{productId}',
-        description: 'Get current stock levels and availability across warehouses. Replace {productId} with an actual product ID.',
+        path: '/api/inventory/prod_123',
+        description: 'Get current stock levels and availability. (Note: In a real app, this would be /api/inventory/{productId})',
         exampleResponse: '{\n  "productId": "prod_123",\n  "totalStock": 150,\n  "reserved": 25,\n  "available": 125,\n  "warehouses": [\n    {"id": "wh_1", "location": "NYC", "stock": 75},\n    {"id": "wh_2", "location": "LA", "stock": 75}\n  ],\n  "lowStockThreshold": 20\n}'
       },
       {
