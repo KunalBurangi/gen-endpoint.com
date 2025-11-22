@@ -1,4 +1,3 @@
-```typescript
 import { NextResponse } from 'next/server';
 import { inventoryStore } from '@/data/mock-inventory';
 import { nanoid } from 'nanoid';
@@ -43,7 +42,7 @@ export async function POST(request: Request) {
       reserved: quantity,
       productId,
       remainingAvailable: available - quantity,
-      reservationId: `res_${ nanoid(8) } `
+      reservationId: `res_${nanoid(8)} `
     });
 
   } catch (error) {
@@ -53,4 +52,3 @@ export async function POST(request: Request) {
     );
   }
 }
-```
