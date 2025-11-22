@@ -31,12 +31,25 @@ const defaultComments: Comment[] = [
             name: "Jane Doe",
             avatar: "https://placehold.co/40x40.png"
         },
-        id: "usr_3",
-        name: "Charlie",
-    },
-    rating: 2,
-    status: "pending_moderation",
-    createdAt: "2024-08-17T10:00:00Z",
-    replies: []
+        rating: 5,
+        status: "approved",
+        createdAt: "2024-08-17T10:00:00Z",
+        replies: [
+            {
+                id: "comment_124",
+                resourceType: "product",
+                resourceId: "prod_123",
+                content: "Glad you liked it!",
+                author: {
+                    id: "usr_3",
+                    name: "Charlie",
+                    avatar: "https://placehold.co/40x40.png"
+                },
+                status: "approved",
+                createdAt: "2024-08-17T11:00:00Z",
+                replies: [],
+                parentId: "comment_123"
+            }
+        ]
     }
 ];

@@ -1,4 +1,3 @@
-```typescript
 import { NextResponse } from 'next/server';
 import { commentsStore, type Comment } from '@/data/mock-comments';
 import { nanoid } from 'nanoid';
@@ -16,7 +15,7 @@ export async function POST(request: Request) {
         }
 
         const newComment: Comment = {
-            id: `comment_${ nanoid(6) } `,
+            id: `comment_${nanoid(6)} `,
             resourceType,
             resourceId,
             content,
@@ -42,4 +41,3 @@ export async function POST(request: Request) {
         );
     }
 }
-```
